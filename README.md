@@ -1,4 +1,5 @@
-vertx-gradle-template
-=====================
+# Vert.x Gradle Template
 
-Gradle project template for creating a Vert.x module
+Template project for creating a Vert.x module with a Gradle build.
+
+Clone this and adapt it to easily develop Vert.x modules using Gradle as your build tool.
