@@ -1,3 +1,5 @@
+
+
 /*
  * Copyright 2012 the original author or authors.
  *
@@ -52,6 +54,13 @@ dependencies {
   testCompile "junit:junit:$junitVersion"
   testCompile( "io.vertx:testtools:$toolsVersion" ) {
     transitive = false
+  }
+}
+
+buildscript {
+  dependencies {
+    //runtime "io.vertx:vertx-platform:$vertxVersion"
+    compile "io.vertx:vertx-platform:$vertxVersion"
   }
 }
 
@@ -115,6 +124,11 @@ test {
   testLogging.showStandardStreams = true
 
   testLogging { exceptionFormat "full" }
+}
+
+task runMod(dependsOn: copyMod) << {
+  def pm = PlatformLocator.factory.createPlatformManager()
+  pm.deployModule("maven:$groupname:$artifact:$version", null, 1, null)
 }
 
 
