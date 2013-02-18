@@ -4,7 +4,6 @@ require "vertx_tests"
 require "vertx"
 
 def test1
-  puts "in test1"
   VertxAssert.testComplete()
 end
 
