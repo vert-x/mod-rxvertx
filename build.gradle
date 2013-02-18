@@ -1,4 +1,4 @@
-
+import org.vertx.java.platform.PlatformLocator
 
 /*
  * Copyright 2012 the original author or authors.
@@ -47,10 +47,8 @@ repositories {
 }
 
 dependencies {
-
   provided "io.vertx:vertx-core:$vertxVersion"
   provided "io.vertx:vertx-platform:$vertxVersion"
-
   testCompile "junit:junit:$junitVersion"
   testCompile( "io.vertx:testtools:$toolsVersion" ) {
     transitive = false
@@ -58,9 +56,16 @@ dependencies {
 }
 
 buildscript {
+
+  repositories {
+    mavenLocal()
+    maven { url 'https://oss.sonatype.org/content/repositories/snapshots' }
+    mavenCentral()
+  }
+
   dependencies {
-    //runtime "io.vertx:vertx-platform:$vertxVersion"
-    compile "io.vertx:vertx-platform:$vertxVersion"
+    classpath "io.vertx:vertx-core:$vertxVersion"
+    classpath "io.vertx:vertx-platform:$vertxVersion"
   }
 }
 
@@ -129,8 +134,14 @@ test {
 task runMod(dependsOn: copyMod) << {
   def pm = PlatformLocator.factory.createPlatformManager()
   pm.deployModule("maven:$groupname:$artifact:$version", null, 1, null)
+  System.out.println("CTRL-C to stop server")
+  Thread.sleep(Long.MAX_VALUE);
 }
 
+task pullInDeps(dependsOn: copyMod) << {
+  def pm = PlatformLocator.factory.createPlatformManager()
+  pm.pullInDependencies("maven:$groupname:$artifact:$version")
+}
 
 //task collectDeps(type: Copy) {
 //  group = 'vert.x'
