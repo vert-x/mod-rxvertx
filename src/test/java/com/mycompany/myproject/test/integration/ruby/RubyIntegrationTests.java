@@ -1,4 +1,4 @@
-package com.mycompany.myproject.tests;
+package com.mycompany.myproject.test.integration.ruby;
 /*
  * Copyright 2013 Red Hat, Inc.
  *
@@ -17,20 +17,24 @@ package com.mycompany.myproject.tests;
  * @author <a href="http://tfox.org">Tim Fox</a>
  */
 
-import com.mycompany.myproject.testverticles.MyTestVerticle;
+import io.vertx.testtools.ScriptClassRunner;
+import io.vertx.testtools.TestVerticleInfo;
 import org.junit.Test;
-import org.vertx.java.testframework.TestBase;
+import org.junit.runner.RunWith;
 
-public class MyTest extends TestBase {
-
-  @Override
-  protected void setUp() throws Exception {
-    super.setUp();
-    startApp(MyTestVerticle.class.getName());
-  }
-
+/**
+ * This is dummy JUnit test class which is used to run any Ruby test scripts as JUnit tests.
+ *
+ * The scripts by default go in src/test/resources.
+ *
+  If you don't have any Ruby tests in your project you can delete this
+ *
+ * Do need to edit this file unless you want it to look for tests elsewhere
+ */
+@TestVerticleInfo(filenameFilter=".+\\.rb", funcRegex="def[\\s]+(test[^\\s]+)")
+@RunWith(ScriptClassRunner.class)
+public class RubyIntegrationTests {
   @Test
-  public void testMyVerticle() throws Exception {
-    startTest(getMethodName());
+  public void __vertxDummy() {
   }
 }

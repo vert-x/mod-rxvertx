@@ -17,6 +17,7 @@
 apply from: "gradle/maven.gradle"
 
 apply plugin: 'java'
+apply plugin: 'groovy'
 apply plugin: 'idea'
 apply plugin: 'eclipse'
 
@@ -48,21 +49,15 @@ dependencies {
   provided "io.vertx:vertx-core:$vertxVersion"
   provided "io.vertx:vertx-platform:$vertxVersion"
 
-  testCompile( "io.vertx:vertx-testframework:$vertxVersion" ) {
+  testCompile "junit:junit:$junitVersion"
+  testCompile( "io.vertx:testtools:$toolsVersion" ) {
     transitive = false
   }
-  testCompile  "junit:junit:$junitVersion"
-  // testCompile "io.vertx:vertx-platform:$vertxVersion"
 }
 
 sourceSets {
   main {
     compileClasspath = compileClasspath + configurations.provided
-  }
-  test {
-    resources {
-      srcDirs "src/test/javascript_scripts", "src/test/resources"
-    }
   }
 }
 
@@ -88,36 +83,32 @@ artifacts {
   archives dist
 }
 
-//task cleanTestTmpModules(type: Delete) {
-//  delete { file("src/test/mod-test").listFiles().find {
-//    true
-//  } }
-//}
+task cleanModsDir(type: Delete) {
+  delete 'mods'
+}
 
-//clean {
-//  dependsOn cleanTestTmpModules
-//}
-
-task prepareVertxTest(type: Copy, dependsOn: copyMod) {
-  from 'build/mod'
-  into 'src/test/mod-test' // Copy the mod into the mods directory
+clean {
+  dependsOn cleanModsDir
 }
 
 test {
-  dependsOn prepareVertxTest
-  
-  // Remove any classpath entries for the classes or resources of the rhino verticle and also remove the
-  // Rhino jar from the classpath
-  // If we don't do this then the system classloader will load them which can cause issues with loading resources
-  // from inside JS verticles
+
+  dependsOn copyMod
+
+  // Remove any classpath entries for the module classes and resources- these must be picked up using the module classloader from
+  // inside the module, not from the system classpath
   classpath -= sourceSets.main.output
   classpath -= configurations.compile
+
+//  classpath.each {
+//    File file ->
+//      println file.absolutePath
+//  }
 
   outputs.upToDateWhen { false }
 
   // Some vert.x properties
   systemProperty 'vertx.test.timeout', 15
-  //systemProperty 'vertx.mods', "$projectDir/src/test/mod-test"  // Set vertx.mods to the mod directory
   systemProperty 'vertx.version', "$project.version"
 
   // Show output

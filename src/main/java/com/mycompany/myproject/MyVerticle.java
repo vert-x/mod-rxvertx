@@ -22,7 +22,6 @@ import org.vertx.java.platform.Verticle;
 public class MyVerticle extends Verticle {
 
   public void start() {
-    System.out.println("In start()");
   }
 
   public void stop() {

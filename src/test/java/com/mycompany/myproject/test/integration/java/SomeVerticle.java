@@ -1,4 +1,4 @@
-package com.mycompany.myproject.testverticles;/*
+package com.mycompany.myproject.test.integration.java;/*
  * Copyright 2013 Red Hat, Inc.
  *
  * Red Hat licenses this file to you under the Apache License, version 2.0
@@ -16,26 +16,18 @@ package com.mycompany.myproject.testverticles;/*
  * @author <a href="http://tfox.org">Tim Fox</a>
  */
 
-import org.vertx.java.core.Handler;
-import org.vertx.java.testframework.TestClientBase;
+import io.vertx.testtools.VertxAssert;
+import org.vertx.java.platform.Verticle;
 
-public class MyTestVerticle extends TestClientBase {
+public class SomeVerticle extends Verticle {
 
   public void start() {
-    super.start();
-    System.out.println("start complete");
-    tu.appReady();
-  }
+    VertxAssert.initialize(vertx);
 
-  public void testMyVerticle() {
-    System.out.println("in testMyVerticle");
+    // You can also assert from other verticles!!
+    VertxAssert.assertEquals("foo", "foo");
 
-    container.deployModule("maven:com.mycompany:my-module:1.0.0-SNAPSHOT", new Handler<String>() {
-      @Override
-      public void handle(String event) {
-        tu.testComplete();
-      }
-    });
-
+    // And complete tests from other verticles
+    VertxAssert.testComplete();
   }
 }
