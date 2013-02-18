@@ -1,7 +1,9 @@
 # Import the VertxAssert class - this has the exact same API as JUnit
-from io.vertx.testtools import VertxAssert
+from org.vertx.testtools import VertxAssert
 
 import vertx
+
+# The test methods must begin with "test"
 
 def test_1() :
     VertxAssert.testComplete()

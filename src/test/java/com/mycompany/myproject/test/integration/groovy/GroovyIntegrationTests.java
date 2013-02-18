@@ -1,4 +1,4 @@
-package com.mycompany.myproject.test.integration.javascript;
+package com.mycompany.myproject.test.integration.groovy;
 /*
  * Copyright 2013 Red Hat, Inc.
  *
@@ -19,22 +19,21 @@ package com.mycompany.myproject.test.integration.javascript;
 
 import org.vertx.testtools.ScriptClassRunner;
 import org.vertx.testtools.TestVerticleInfo;
-import org.vertx.testtools.VertxAssert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 /**
- * This is dummy JUnit test class which is used to run any JavaScript test scripts as JUnit tests.
+ * This is dummy JUnit test class which is used to run any Groovy test scripts as JUnit tests.
  *
  * The scripts by default go in src/test/resources.
  *
- * If you don't have any JavaScript tests in your project you can delete this
+ * If you don't have any Groovy tests in your project you can delete this
  *
  * Do need to edit this file unless you want it to look for tests elsewhere
  */
-@TestVerticleInfo(filenameFilter=".+\\.js", funcRegex="function[\\s]+(test[^\\s(]+)")
+@TestVerticleInfo(filenameFilter=".+\\.groovy", funcRegex="def[\\s]+(test[^\\s(]+)")
 @RunWith(ScriptClassRunner.class)
-public class JavaScriptIntegrationTests {
+public class GroovyIntegrationTests {
   @Test
   public void __vertxDummy() {
   }

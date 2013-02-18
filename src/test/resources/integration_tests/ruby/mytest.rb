@@ -3,6 +3,8 @@ require "vertx_tests"
 
 require "vertx"
 
+# The test methods must begin with "test"
+
 def test1
   VertxAssert.testComplete()
 end

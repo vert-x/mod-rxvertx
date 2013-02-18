@@ -17,8 +17,8 @@ package com.mycompany.myproject.test.integration.ruby;
  * @author <a href="http://tfox.org">Tim Fox</a>
  */
 
-import io.vertx.testtools.ScriptClassRunner;
-import io.vertx.testtools.TestVerticleInfo;
+import org.vertx.testtools.ScriptClassRunner;
+import org.vertx.testtools.TestVerticleInfo;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 

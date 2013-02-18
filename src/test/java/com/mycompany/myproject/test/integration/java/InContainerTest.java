@@ -16,9 +16,9 @@ package com.mycompany.myproject.test.integration.java;/*
  * @author <a href="http://tfox.org">Tim Fox</a>
  */
 
-import static io.vertx.testtools.VertxAssert.*;
+import static org.vertx.testtools.VertxAssert.*;
 
-import io.vertx.testtools.TestVerticle;
+import org.vertx.testtools.TestVerticle;
 import org.junit.Test;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.http.HttpClientResponse;
