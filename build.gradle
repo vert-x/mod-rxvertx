@@ -32,6 +32,8 @@ defaultTasks = ['assemble']
 sourceCompatibility = '1.7'
 targetCompatibility = '1.7'
 
+moduleName = "maven:$groupname:$artifact:$version"
+
 // We don't produce a jar
 jar.enabled = false 
 assert configurations.archives.artifacts.removeAll { it.file == jar.archivePath }
@@ -78,7 +80,7 @@ sourceSets {
 }
 
 task copyMod( type:Copy, dependsOn: 'classes', description: 'Assemble the module into the local mods directory' ) {
-  into "mods/maven:$groupname:$artifact:$version"
+  into "mods/$moduleName"
   from compileJava
   from 'src/main/resources'
   into( 'lib' ) {
@@ -123,7 +125,7 @@ test {
 
   systemProperty 'vertx.test.timeout', 15
   systemProperty 'vertx.version', version
-  systemProperty 'vertx.modulename', "maven:$groupname:$artifact:$version"
+  systemProperty 'vertx.modulename', moduleName
 
   // Show output
   testLogging.showStandardStreams = true
@@ -133,7 +135,7 @@ test {
 
 task runMod(dependsOn: copyMod, description: 'Run the module using all the build dependencies (not using installed vertx') << {
   def pm = PlatformLocator.factory.createPlatformManager()
-  pm.deployModule("maven:$groupname:$artifact:$version", null, 1, new Handler<String>() {
+  pm.deployModule(moduleName, null, 1, new Handler<String>() {
     public void handle(String deploymentID) {
       System.out.println("CTRL-C to stop server")
     }
@@ -144,9 +146,8 @@ task runMod(dependsOn: copyMod, description: 'Run the module using all the build
 task pullInDeps(dependsOn: copyMod, description: 'Pull in all the module dependencies for the module into the nested mods directory') << {
   if (pullInDeps == 'true') {
     def pm = PlatformLocator.factory.createPlatformManager()
-    def modName = "maven:$groupname:$artifact:$version"
-    System.out.println("Pulling in dependencies for module " + modName + " Please wait")
-    pm.pullInDependencies(modName)
+    System.out.println("Pulling in dependencies for module " + moduleName + " Please wait")
+    pm.pullInDependencies(moduleName)
     System.out.println("Dependencies pulled into mods directory of module")
   }
 }
