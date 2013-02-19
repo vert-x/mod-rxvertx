@@ -123,6 +123,7 @@ test {
 
   systemProperty 'vertx.test.timeout', 15
   systemProperty 'vertx.version', version
+  systemProperty 'vertx.modulename', "maven:$groupname:$artifact:$version"
 
   // Show output
   testLogging.showStandardStreams = true
