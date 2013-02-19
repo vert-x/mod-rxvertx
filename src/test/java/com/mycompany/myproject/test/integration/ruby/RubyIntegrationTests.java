@@ -27,7 +27,7 @@ import org.junit.runner.RunWith;
  *
  * The scripts by default go in src/test/resources.
  *
-  If you don't have any Ruby tests in your project you can delete this
+ * If you don't have any Ruby tests in your project you can delete this
  *
  * Do need to edit this file unless you want it to look for tests elsewhere
  */
