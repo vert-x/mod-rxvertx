@@ -122,6 +122,7 @@ test {
   outputs.upToDateWhen { false }
 
   systemProperty 'vertx.test.timeout', 15
+  systemProperty 'vertx.version', version
 
   // Show output
   testLogging.showStandardStreams = true
