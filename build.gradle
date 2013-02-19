@@ -1,4 +1,5 @@
 import org.vertx.java.platform.PlatformLocator
+import org.vertx.java.core.Handler
 
 /*
  * Copyright 2012 the original author or authors.
@@ -85,7 +86,7 @@ task copyMod( type:Copy, dependsOn: 'classes' ) {
 }
 
 // Package into build/libs/mod.zip
-task dist( type: Zip) {
+task modZip( type: Zip, dependsOn: 'pullInDeps') {
   group = 'vert.x'
   description = "Assembles a vert.x module"
   destinationDir = project.file('build/libs')
@@ -94,7 +95,7 @@ task dist( type: Zip) {
 }
 
 artifacts {
-  archives dist
+  archives modZip
 }
 
 task cleanModsDir(type: Delete) {
@@ -106,9 +107,7 @@ clean {
 }
 
 test {
-
   dependsOn copyMod
-
   // Remove any classpath entries for the module classes and resources- these must be picked up using the module classloader from
   // inside the module, not from the system classpath
   classpath -= sourceSets.main.output
@@ -119,11 +118,10 @@ test {
 //      println file.absolutePath
 //  }
 
+  // Make sure tests are always run!
   outputs.upToDateWhen { false }
 
-  // Some vert.x properties
   systemProperty 'vertx.test.timeout', 15
-  systemProperty 'vertx.version', "$project.version"
 
   // Show output
   testLogging.showStandardStreams = true
@@ -133,24 +131,20 @@ test {
 
 task runMod(dependsOn: copyMod) << {
   def pm = PlatformLocator.factory.createPlatformManager()
-  pm.deployModule("maven:$groupname:$artifact:$version", null, 1, null)
-  System.out.println("CTRL-C to stop server")
+  pm.deployModule("maven:$groupname:$artifact:$version", null, 1, new Handler<String>() {
+    public void handle(String deploymentID) {
+      System.out.println("CTRL-C to stop server")
+    }
+  });
   Thread.sleep(Long.MAX_VALUE);
 }
 
 task pullInDeps(dependsOn: copyMod) << {
-  def pm = PlatformLocator.factory.createPlatformManager()
-  pm.pullInDependencies("maven:$groupname:$artifact:$version")
+  if (pullInDeps == 'true') {
+    def pm = PlatformLocator.factory.createPlatformManager()
+    def modName = "maven:$groupname:$artifact:$version"
+    System.out.println("Pulling in dependencies for module " + modName + " Please wait")
+    pm.pullInDependencies(modName)
+    System.out.println("Dependencies pulled into mods directory of module")
+  }
 }
-
-//task collectDeps(type: Copy) {
-//  group = 'vert.x'
-//  description = 'conveniently collect dependencies for other IDEs'
-//  destinationDir = file("build/deps")
-//  into("compile") {
-//    from configurations.compile
-//  }
-//  into("test") {
-//    from configurations.testCompile
-//  }
-//}
