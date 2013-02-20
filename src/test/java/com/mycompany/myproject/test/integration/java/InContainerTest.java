@@ -35,44 +35,41 @@ import org.vertx.java.core.http.HttpServerRequest;
  */
 public class InContainerTest extends TestVerticle {
 
-//  @Test
-//  public void testDeployMod() {
-//    container.deployModule(System.getProperty("vertx.modulename"), new Handler<String>() {
-//      @Override
-//      public void handle(String deploymentID) {
-//        assertNotNull("deploymentID should not be null", deploymentID);
-//        testComplete();
-//      }
-//    });
-//  }
-//
-//  @Test
-//  public void testHTTP() {
-//    vertx.createHttpServer().requestHandler(new Handler<HttpServerRequest>() {
-//      public void handle(HttpServerRequest req) {
-//        req.response.end();
-//      }
-//    }).listen(8181);
-//    vertx.createHttpClient().setPort(8181).getNow("/",new Handler<HttpClientResponse>() {
-//      @Override
-//      public void handle(HttpClientResponse resp) {
-//        assertEquals(200, resp.statusCode);
-//        testComplete();
-//      }
-//    });
-//  }
+  @Test
+  public void testDeployMod() {
+    container.deployModule(System.getProperty("vertx.modulename"), new Handler<String>() {
+      @Override
+      public void handle(String deploymentID) {
+        assertNotNull("deploymentID should not be null", deploymentID);
+        testComplete();
+      }
+    });
+  }
+
+  @Test
+  public void testHTTP() {
+    vertx.createHttpServer().requestHandler(new Handler<HttpServerRequest>() {
+      public void handle(HttpServerRequest req) {
+        req.response.end();
+      }
+    }).listen(8181);
+    vertx.createHttpClient().setPort(8181).getNow("/",new Handler<HttpClientResponse>() {
+      @Override
+      public void handle(HttpClientResponse resp) {
+        assertEquals(200, resp.statusCode);
+        testComplete();
+      }
+    });
+  }
 
   @Test
   public void test3() {
-
-    System.out.println("in test3!!");
-
-    //container.deployVerticle(SomeVerticle.class.getName());
+    container.deployVerticle(SomeVerticle.class.getName());
   }
 
-//  @Test
-//  public void test4() {
-//    testComplete();
-//  }
+  @Test
+  public void test4() {
+    testComplete();
+  }
 
 }

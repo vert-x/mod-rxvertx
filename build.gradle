@@ -125,8 +125,6 @@ test {
       println file.absolutePath
   }
 
-  include '**/InContainerTest*'
-
   // Make sure tests are always run!
   outputs.upToDateWhen { false }
 
