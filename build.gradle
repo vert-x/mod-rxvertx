@@ -53,9 +53,7 @@ dependencies {
   provided "io.vertx:vertx-core:$vertxVersion"
   provided "io.vertx:vertx-platform:$vertxVersion"
   testCompile "junit:junit:$junitVersion"
-  testCompile( "io.vertx:testtools:$toolsVersion" ) {
-    transitive = false
-  }
+  testCompile "io.vertx:testtools:$toolsVersion"
 }
 
 // This sets up the classpath for
@@ -123,7 +121,7 @@ test {
   // Make sure tests are always run!
   outputs.upToDateWhen { false }
 
-  systemProperty 'vertx.test.timeout', 15
+  systemProperty 'vertx.test.timeout', 300
   systemProperty 'vertx.version', version
   systemProperty 'vertx.modulename', moduleName
 
