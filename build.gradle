@@ -38,6 +38,13 @@ project.ext.moduleName = "maven:$groupname:$artifact:$version"
 jar.enabled = false 
 assert configurations.archives.artifacts.removeAll { it.file == jar.archivePath }
 
+configurations.all {
+  resolutionStrategy {
+    cacheDynamicVersionsFor 0, 'seconds'
+    cacheChangingModulesFor 0, 'seconds'
+  }
+}
+
 configurations {
   provided
   testCompile.extendsFrom provided
