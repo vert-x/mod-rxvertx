@@ -120,10 +120,10 @@ test {
   classpath -= sourceSets.main.output
   classpath -= configurations.compile
 
-//  classpath.each {
-//    File file ->
-//      println file.absolutePath
-//  }
+  classpath.each {
+    File file ->
+      println file.absolutePath
+  }
 
   // Make sure tests are always run!
   outputs.upToDateWhen { false }
