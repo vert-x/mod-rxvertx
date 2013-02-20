@@ -108,6 +108,10 @@ clean {
 
 test {
   dependsOn copyMod
+  // Important! Remove any classpath entries for the module classes and resources- these must be picked up using the
+  // module classloader from  inside the module, not from the system classpath!
+  classpath -= sourceSets.main.output
+  classpath -= configurations.compile
 
   // Make sure tests are always run!
   outputs.upToDateWhen { false }
