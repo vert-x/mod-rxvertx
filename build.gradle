@@ -32,7 +32,7 @@ defaultTasks = ['assemble']
 sourceCompatibility = '1.7'
 targetCompatibility = '1.7'
 
-moduleName = "maven:$groupname:$artifact:$version"
+project.moduleName = "maven:$groupname:$artifact:$version"
 
 // We don't produce a jar
 jar.enabled = false 
