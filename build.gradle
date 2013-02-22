@@ -1,142 +1,56 @@
-import org.vertx.java.platform.PlatformLocator
-import org.vertx.java.core.Handler
+apply from: "gradle/vertx.gradle"
 
 /*
- * Copyright 2012 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+Important tasks:
+
+./gradlew (no params) by default will call the 'assemble' task
+
+assemble - builds the outputs, by default this is the module zip file. It can also include a jar file if produceJar
+          in gradle.properties is set to true. Outputs are created in build/libs.
+          if pullInDeps in gradle.properties is set to 'true' then the modules dependencies will be
+          automatically pulled into a nested mods directory inside the module during the build
+
+copyMod - builds and copies the module to the local 'mods' directory so you can execute vertx runmod (etc)
+          directly from the command line
+
+modZip - creates the module zip into build/libs
+
+clean - cleans everything up
+
+test - runs the tests. An nice html test report is created in build/reports/tests (index.html)
+
+runMod - runs the module. This is similar to executing vertx runmod from the command line except that it does
+         not use the version of Vert.x installed and on the PATH to run it. Instead it uses the version of Vert.x
+         that the module was compiled and tested against.
+
+pullInDeps - pulls in all dependencies of the module into a nested module directory
+
+uploadArchives - upload the module zip file (and jar if one has been created) to Nexus. You will need to
+                 configure sonatypeUsername and sonatypePassword in ~/.gradle/gradle.properties.
+
+install - install any jars produced to the local Maven repository (.m2)
+
+
+
  */
 
-apply from: "gradle/maven.gradle"
-
-apply plugin: 'java'
-apply plugin: 'groovy'
-apply plugin: 'idea'
-apply plugin: 'eclipse'
-
-group = groupname
-archivesBaseName = artifact
-
-defaultTasks = ['assemble']
-
-sourceCompatibility = '1.7'
-targetCompatibility = '1.7'
-
-project.ext.moduleName = "maven:$groupname:$artifact:$version"
-
-// We don't produce a jar
-jar.enabled = false 
-assert configurations.archives.artifacts.removeAll { it.file == jar.archivePath }
-
-configurations {
-  provided
-  testCompile.extendsFrom provided
-}
-
-repositories {
-  mavenLocal()
-  maven { url 'https://oss.sonatype.org/content/repositories/snapshots' }
-  mavenCentral()
-}
-
 dependencies {
-  provided "io.vertx:vertx-core:$vertxVersion"
-  provided "io.vertx:vertx-platform:$vertxVersion"
-  testCompile "junit:junit:$junitVersion"
-  testCompile "io.vertx:testtools:$toolsVersion"
-}
-
-// This sets up the classpath for
-buildscript {
-
-  repositories {
-    mavenLocal()
-    maven { url 'https://oss.sonatype.org/content/repositories/snapshots' }
-    mavenCentral()
-  }
-
-  dependencies {
-    classpath "io.vertx:vertx-core:$vertxVersion"
-    classpath "io.vertx:vertx-platform:$vertxVersion"
-  }
-}
-
-sourceSets {
-  main {
-    compileClasspath = compileClasspath + configurations.provided
-  }
-}
-
-task copyMod( type:Copy, dependsOn: 'classes', description: 'Assemble the module into the local mods directory' ) {
-  into "mods/$moduleName"
-  from compileJava
-  from 'src/main/resources'
-  into( 'lib' ) {
-    from configurations.compile
-  }
-}
-
-task modZip( type: Zip, dependsOn: 'pullInDeps', description: 'Package the module .zip file') {
-  group = 'vert.x'
-  description = "Assembles a vert.x module"
-  destinationDir = project.file('build/libs')
-  archiveName = "${artifact}-${version}" + ".zip"
-  from copyMod
-}
-
-artifacts {
-  archives modZip
-}
-
-task cleanModsDir(type: Delete) {
-  delete 'mods'
-}
-
-clean {
-  dependsOn cleanModsDir
+  /*
+  Add your module jar dependencies here
+  E.g.
+  compile "com.foo:foo-lib:1.0.1" - for compile time deps - this will end up in your module too!
+  testCompile "com.foo:foo-lib:1.0.1" - for test time deps
+  provided "com.foo:foo-lib:1.0.1" - if you DON'T want it to be packaged in the module jar
+   */
 }
 
 test {
-  dependsOn copyMod
-
-  // Make sure tests are always run!
-  outputs.upToDateWhen { false }
-
+  // Configure the test timeout
   systemProperty 'vertx.test.timeout', 300
-  systemProperty 'vertx.version', version
-  systemProperty 'vertx.modulename', moduleName
 
-  // Show output
-  testLogging.showStandardStreams = true
+  /* Configure which tests are included
+  include 'org/foo/**'
+  exclude 'org/boo/**'
+  */
 
-  testLogging { exceptionFormat "full" }
-}
-
-task runMod(dependsOn: copyMod, description: 'Run the module using all the build dependencies (not using installed vertx') << {
-  def pm = PlatformLocator.factory.createPlatformManager()
-  pm.deployModule(moduleName, null, 1, new Handler<String>() {
-    public void handle(String deploymentID) {
-      System.out.println("CTRL-C to stop server")
-    }
-  });
-  Thread.sleep(Long.MAX_VALUE);
-}
-
-task pullInDeps(dependsOn: copyMod, description: 'Pull in all the module dependencies for the module into the nested mods directory') << {
-  if (pullInDeps == 'true') {
-    def pm = PlatformLocator.factory.createPlatformManager()
-    System.out.println("Pulling in dependencies for module " + moduleName + " Please wait")
-    pm.pullInDependencies(moduleName)
-    System.out.println("Dependencies pulled into mods directory of module")
-  }
 }
