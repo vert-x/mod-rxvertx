@@ -26,6 +26,5 @@ public class MyVerticle extends Verticle {
   }
 
   public void stop() {
-
   }
 }
