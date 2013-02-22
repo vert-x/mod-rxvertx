@@ -16,13 +16,13 @@ package com.mycompany.myproject.test.integration.java;/*
  * @author <a href="http://tfox.org">Tim Fox</a>
  */
 
-import static org.vertx.testtools.VertxAssert.*;
-
-import org.vertx.testtools.TestVerticle;
 import org.junit.Test;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.http.HttpClientResponse;
 import org.vertx.java.core.http.HttpServerRequest;
+import org.vertx.testtools.TestVerticle;
+
+import static org.vertx.testtools.VertxAssert.*;
 
 /**
  * Example Java integration test

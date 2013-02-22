@@ -55,9 +55,6 @@ dependencies {
 }
 
 test {
-  // Configure the test timeout
-  systemProperty 'vertx.test.timeout', 300
-
   /* Configure which tests are included
   include 'org/foo/**'
   exclude 'org/boo/**'

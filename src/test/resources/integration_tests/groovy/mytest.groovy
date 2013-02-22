@@ -1,7 +1,9 @@
 // Import the VertxAssert class - this has the same API as JUnit
+
 import org.vertx.testtools.VertxAssert
+
 // And import static the VertxTests script
-import static VertxTests.*
+import static org.vertx.groovy.testtools.VertxTests.initTests
 
 // The test methods must being with "test"
 

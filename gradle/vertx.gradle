@@ -1,5 +1,5 @@
-import org.vertx.java.platform.PlatformLocator
 import org.vertx.java.core.Handler
+import org.vertx.java.platform.PlatformLocator
 
 /*
  * Copyright 2012 the original author or authors.
@@ -24,6 +24,10 @@ apply plugin: 'groovy'
 apply plugin: 'idea'
 apply plugin: 'eclipse'
 
+// We load some extra properties from vertx.properties
+loadProperties("vertx.properties")
+
+version = project.ext.version
 group = groupname
 archivesBaseName = artifact
 
@@ -113,10 +117,6 @@ test {
   // Make sure tests are always run!
   outputs.upToDateWhen { false }
 
-  systemProperty 'vertx.test.timeout', 300
-  systemProperty 'vertx.version', version
-  systemProperty 'vertx.modulename', moduleName
-
   // Show output
   testLogging.showStandardStreams = true
 
@@ -139,5 +139,16 @@ task pullInDeps(dependsOn: copyMod, description: 'Pull in all the module depende
     System.out.println("Pulling in dependencies for module " + moduleName + " Please wait")
     pm.pullInDependencies(moduleName)
     System.out.println("Dependencies pulled into mods directory of module")
+  }
+}
+
+def loadProperties(String sourceFileName) {
+  def config = new Properties()
+  def propFile = new File(sourceFileName)
+  if (propFile.canRead()) {
+    config.load(new FileInputStream(propFile))
+    for (Map.Entry property in config) {
+      project.ext[property.key] = property.value;
+    }
   }
 }

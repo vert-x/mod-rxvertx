@@ -17,11 +17,10 @@ package com.mycompany.myproject.test.integration.javascript;
  * @author <a href="http://tfox.org">Tim Fox</a>
  */
 
-import org.vertx.testtools.ScriptClassRunner;
-import org.vertx.testtools.TestVerticleInfo;
-import org.vertx.testtools.VertxAssert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.vertx.testtools.ScriptClassRunner;
+import org.vertx.testtools.TestVerticleInfo;
 
 /**
  * This is dummy JUnit test class which is used to run any JavaScript test scripts as JUnit tests.

@@ -17,10 +17,10 @@ package com.mycompany.myproject.test.integration.ruby;
  * @author <a href="http://tfox.org">Tim Fox</a>
  */
 
-import org.vertx.testtools.ScriptClassRunner;
-import org.vertx.testtools.TestVerticleInfo;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.vertx.testtools.ScriptClassRunner;
+import org.vertx.testtools.TestVerticleInfo;
 
 /**
  * This is dummy JUnit test class which is used to run any Ruby test scripts as JUnit tests.
