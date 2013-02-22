@@ -40,7 +40,7 @@ dependencies {
   E.g.
   compile "com.foo:foo-lib:1.0.1" - for compile time deps - this will end up in your module too!
   testCompile "com.foo:foo-lib:1.0.1" - for test time deps
-  provided "com.foo:foo-lib:1.0.1" - if you DON'T want it to be packaged in the module jar
+  provided "com.foo:foo-lib:1.0.1" - if you DON'T want it to be packaged in the module zip
    */
 }
 
