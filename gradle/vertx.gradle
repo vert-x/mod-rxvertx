@@ -1,5 +1,6 @@
 import org.vertx.java.core.Handler
 import org.vertx.java.platform.PlatformLocator
+import org.vertx.java.platform.impl.ModuleClassLoader
 
 /*
  * Copyright 2012 the original author or authors.
@@ -124,6 +125,7 @@ test {
 }
 
 task runMod(dependsOn: copyMod, description: 'Run the module using all the build dependencies (not using installed vertx') << {
+  ModuleClassLoader.reverseLoadOrder = false
   def pm = PlatformLocator.factory.createPlatformManager()
   pm.deployModule(moduleName, null, 1, new Handler<String>() {
     public void handle(String deploymentID) {
