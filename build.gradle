@@ -1,9 +1,19 @@
 apply from: "gradle/vertx.gradle"
 
 /*
-Important tasks:
+Usage:
 
-./gradlew (no params) by default will call the 'assemble' task
+./gradlew task_name
+
+(or gradlew.bat task_name if you have the misfortune to have to use Windows)
+
+If no task name is specified then the default task 'assemble' is run
+
+Task names are:
+
+idea - generate a skeleton IntelliJ IDEA project
+
+eclipse - generate a skeleton Eclipse IDE project
 
 assemble - builds the outputs, by default this is the module zip file. It can also include a jar file if produceJar
           in gradle.properties is set to true. Outputs are created in build/libs.
