@@ -57,7 +57,7 @@ dependencies {
   testCompile "io.vertx:testtools:$toolsVersion"
 }
 
-// This sets up the classpath for
+// This sets up the classpath for the script itself
 buildscript {
 
   repositories {
