@@ -64,36 +64,5 @@ uploadArchives {
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // configuration methods
 
-def configurePom(def pom) {
-	pom.project {
-		description 'Vert.x module that provides JavaScript support using Rhino'
-		inceptionYear '2013'
-		packaging 'jar'
-		url 'http://vertx.io'
-		
-		developers {
-            developer {
-                id 'purplefox'
-                name 'Tim Fox'
-               // email 'tim@tfox.org'
-            }
-        }
 
-		scm {
-	        url 'https://github.com/vert-x/mod-lang-rhino'
-		}
-		
-		licenses {
-			license {
-				name 'The Apache Software License, Version 2.0'
-				url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
-				distribution 'repo'
-			}
-		}
-
-		properties {
-			setProperty('project.build.sourceEncoding', 'UTF8')
-		}
-	}
-}
 
