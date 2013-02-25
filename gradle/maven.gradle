@@ -40,7 +40,7 @@ uploadArchives {
 
 	repositories {
 		mavenDeployer {
-      setUniqueVersion(false)
+      // setUniqueVersion(false)
 
 			configuration = configurations.archives
 
