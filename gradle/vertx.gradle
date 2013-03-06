@@ -29,15 +29,15 @@ apply plugin: 'eclipse'
 loadProperties("vertx.properties")
 
 version = project.ext.version
-group = groupname
-archivesBaseName = artifact
+group = modowner
+archivesBaseName = modname
 
 defaultTasks = ['assemble']
 
 sourceCompatibility = '1.7'
 targetCompatibility = '1.7'
 
-project.ext.moduleName = "maven:$groupname:$artifact:$version"
+project.ext.moduleName = "$modowner#$modname#$version"
 
 if (produceJar == 'false') {
   jar.enabled = false
@@ -96,7 +96,7 @@ task modZip( type: Zip, dependsOn: 'pullInDeps', description: 'Package the modul
   group = 'vert.x'
   description = "Assembles a vert.x module"
   destinationDir = project.file('build/libs')
-  archiveName = "${artifact}-${version}" + ".zip"
+  archiveName = "${modname}-${version}" + ".zip"
   from copyMod
 }
 
