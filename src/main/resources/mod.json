@@ -1,4 +1,4 @@
 {
   "main":"app.js",
-  "deploys":"maven:io.vertx:lang-jython:1.0.0-SNAPSHOT"
+  "deploys":"io.vertx#lang-jython#1.0.0-SNAPSHOT"
 }
