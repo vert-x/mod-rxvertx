@@ -18,8 +18,6 @@ import org.vertx.java.platform.impl.ModuleClassLoader
  * limitations under the License.
  */
 
-apply from: "gradle/maven.gradle"
-
 apply plugin: 'java'
 apply plugin: 'groovy'
 apply plugin: 'idea'
@@ -27,6 +25,13 @@ apply plugin: 'eclipse'
 
 // We load some extra properties from vertx.properties
 loadProperties("vertx.properties")
+
+// We  have to explicitly load props from the user home dir - on CI we set
+// GRADLE_USER_HOME to a different dir to avoid problems with concurrent builds corrupting
+// a shared Maven local and using Gradle wrapper concurrently
+loadProperties("${System.getProperty('user.home')}/.gradle/gradle.properties")
+
+apply from: "gradle/maven.gradle"
 
 version = project.ext.version
 group = modowner
@@ -50,7 +55,12 @@ configurations {
 }
 
 repositories {
-  mavenLocal()
+  if (System.getenv("JENKINS_HOME") == null) {
+    // We don't want to use mavenLocal when running on CI - mavenLocal is only useful in Gradle for
+    // publishing artifacts locally for development purposes - maven local is also not threadsafe when there
+    // are concurrent builds
+    mavenLocal()
+  }
   maven { url 'https://oss.sonatype.org/content/repositories/snapshots' }
   mavenCentral()
 }
