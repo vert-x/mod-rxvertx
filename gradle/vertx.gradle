@@ -26,9 +26,6 @@ apply plugin: 'groovy'
 apply plugin: 'idea'
 apply plugin: 'eclipse'
 
-// We load some extra properties from vertx.properties
-loadProperties("vertx.properties")
-
 // We  have to explicitly load props from the user home dir - on CI we set
 // GRADLE_USER_HOME to a different dir to avoid problems with concurrent builds corrupting
 // a shared Maven local and using Gradle wrapper concurrently
@@ -36,7 +33,6 @@ loadProperties("${System.getProperty('user.home')}/.gradle/gradle.properties")
 
 apply from: "gradle/maven.gradle"
 
-version = project.ext.version
 group = modowner
 archivesBaseName = modname
 
