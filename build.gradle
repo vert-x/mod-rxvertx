@@ -49,6 +49,9 @@ dependencies {
   compile "com.foo:foo-lib:1.0.1" - for compile time deps - this will end up in your module too!
   testCompile "com.foo:foo-lib:1.0.1" - for test time deps
   provided "com.foo:foo-lib:1.0.1" - if you DON'T want it to be packaged in the module zip
+
+  If you're creating Groovy compiled verticles make sure you add a 'provided' dependency as follows
+  provided "org.codehaus.groovy:groovy-all:$groovyVersion"
    */
 }
 

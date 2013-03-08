@@ -2,6 +2,9 @@ import org.vertx.java.core.Handler
 import org.vertx.java.platform.PlatformLocator
 import org.vertx.java.platform.impl.ModuleClassLoader
 
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
+
 /*
  * Copyright 2012 the original author or authors.
  *
@@ -137,20 +140,29 @@ test {
 task runMod(dependsOn: copyMod, description: 'Run the module using all the build dependencies (not using installed vertx') << {
   ModuleClassLoader.reverseLoadOrder = false
   def pm = PlatformLocator.factory.createPlatformManager()
+  def latch = new CountDownLatch(1)
   pm.deployModule(moduleName, null, 1, new Handler<String>() {
     public void handle(String deploymentID) {
-      System.out.println("CTRL-C to stop server")
+      if (deploymentID != null) {
+        println "CTRL-C to stop server"
+      } else {
+        println "Failed to deploy module"
+        latch.countDown()
+      }
     }
   });
-  Thread.sleep(Long.MAX_VALUE);
+  latch.await(Long.MAX_VALUE, TimeUnit.MILLISECONDS);
 }
 
 task pullInDeps(dependsOn: copyMod, description: 'Pull in all the module dependencies for the module into the nested mods directory') << {
   if (pullInDeps == 'true') {
     def pm = PlatformLocator.factory.createPlatformManager()
-    System.out.println("Pulling in dependencies for module " + moduleName + " Please wait")
-    pm.pullInDependencies(moduleName)
-    System.out.println("Dependencies pulled into mods directory of module")
+    println "Pulling in dependencies for module $moduleName. Please wait"
+    if (pm.pullInDependencies(moduleName)) {
+      println "Dependencies pulled into mods directory of module"
+    } else {
+      println "Failed to pull in dependencies"
+    }
   }
 }
 
