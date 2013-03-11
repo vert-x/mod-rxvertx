@@ -12,6 +12,10 @@ function test_2() {
   vassert.testComplete()
 }
 
-initTests(this);
+var script = this;
+vertx.deployModule(java.lang.System.getProperty("vertx.modulename"), null, 1, function(depID) {
+  console.log("dep id is " + depID)
+  initTests(script);
+});
 
 
