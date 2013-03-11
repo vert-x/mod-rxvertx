@@ -14,7 +14,6 @@ function test_2() {
 
 var script = this;
 vertx.deployModule(java.lang.System.getProperty("vertx.modulename"), null, 1, function(depID) {
-  console.log("dep id is " + depID)
   initTests(script);
 });
 

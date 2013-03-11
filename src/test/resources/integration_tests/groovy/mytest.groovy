@@ -3,7 +3,7 @@
 import static org.vertx.testtools.VertxAssert.*
 
 // And import static the VertxTests script
-import static org.vertx.groovy.testtools.VertxTests.*
+import org.vertx.groovy.testtools.VertxTests;
 
 // The test methods must being with "test"
 
@@ -17,4 +17,4 @@ def test_2() {
 }
 
 // Make sure you call initTests at the bottom of your script
-initTests(this)
+VertxTests.initTests(this)
