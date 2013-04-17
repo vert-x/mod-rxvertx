@@ -17,6 +17,8 @@ package com.mycompany.myproject.test.integration.java;/*
  */
 
 import org.junit.Test;
+import org.vertx.java.core.AsyncResult;
+import org.vertx.java.core.AsyncResultHandler;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.http.HttpClientResponse;
 import org.vertx.java.core.http.HttpServerRequest;
@@ -37,10 +39,11 @@ public class ExampleIntegrationTest extends TestVerticle {
 
   @Test
   public void testDeployMod() {
-    container.deployModule(System.getProperty("vertx.modulename"), new Handler<String>() {
+    container.deployModule(System.getProperty("vertx.modulename"), new AsyncResultHandler<String>() {
       @Override
-      public void handle(String deploymentID) {
-        assertNotNull("deploymentID should not be null", deploymentID);
+      public void handle(AsyncResult<String> asyncResult) {
+        assertTrue(asyncResult.succeeded());
+        assertNotNull("deploymentID should not be null", asyncResult.result());
         testComplete();
       }
     });
@@ -50,13 +53,13 @@ public class ExampleIntegrationTest extends TestVerticle {
   public void testHTTP() {
     vertx.createHttpServer().requestHandler(new Handler<HttpServerRequest>() {
       public void handle(HttpServerRequest req) {
-        req.response.end();
+        req.response().end();
       }
     }).listen(8181);
     vertx.createHttpClient().setPort(8181).getNow("/",new Handler<HttpClientResponse>() {
       @Override
       public void handle(HttpClientResponse resp) {
-        assertEquals(200, resp.statusCode);
+        assertEquals(200, resp.statusCode());
         testComplete();
       }
     });

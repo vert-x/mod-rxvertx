@@ -13,7 +13,8 @@ function test_2() {
 }
 
 var script = this;
-vertx.deployModule(java.lang.System.getProperty("vertx.modulename"), null, 1, function(depID) {
+vertx.deployModule(java.lang.System.getProperty("vertx.modulename"), null, 1, function(err, depID) {
+  vassert.assertTrue(err === null);
   initTests(script);
 });
 
