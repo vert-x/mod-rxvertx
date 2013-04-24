@@ -1,5 +1,6 @@
-load("vertx.js");
-load("vertx_tests.js");
+var container = require("container");
+var vertxTests = require("vertx_tests");
+var vassert = require("vertx_assert");
 
 // The test methods must begin with "test"
 
@@ -13,9 +14,13 @@ function test_2() {
 }
 
 var script = this;
-vertx.deployModule(java.lang.System.getProperty("vertx.modulename"), null, 1, function(err, depID) {
+container.deployModule(java.lang.System.getProperty("vertx.modulename"), null, 1, function(err, depID) {
+  if (err != null) {
+    err.printStackTrace();
+  }
+
   vassert.assertTrue(err === null);
-  initTests(script);
+  vertxTests.startTests(script);
 });
 
 
