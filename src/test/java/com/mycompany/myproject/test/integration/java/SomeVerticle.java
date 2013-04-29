@@ -1,4 +1,5 @@
-package com.mycompany.myproject.test.integration.java;/*
+package com.mycompany.myproject.test.integration.java;
+/*
  * Copyright 2013 Red Hat, Inc.
  *
  * Red Hat licenses this file to you under the Apache License, version 2.0
@@ -27,7 +28,7 @@ public class SomeVerticle extends Verticle {
     // You can also assert from other verticles!!
     VertxAssert.assertEquals("foo", "foo");
 
-    // And complete tests from other verticles
+    // And complete tests from other verticles!!
     VertxAssert.testComplete();
   }
 }
