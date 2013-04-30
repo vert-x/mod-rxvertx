@@ -1,3 +1,9 @@
+This project creates a very simple Vert.x module.
+
+The module
+
+
+
 Put any Java or Groovy classes used in your module in the java or groovy directories.
 
 Put any other resources that you want included in your module in the resources directory, this includes any
