@@ -51,9 +51,7 @@ dependencies {
   provided "com.foo:foo-lib:1.0.1" - if you DON'T want it to be packaged in the module zip
   */
 
-  // If you're creating Groovy compiled verticles you may need the following dependencies
-  provided "org.codehaus.groovy:groovy-all:$groovyVersion"
-  provided "io.vertx:lang-groovy:$groovyLangModVersion@jar"
+  compile "com.netflix.rxjava:rxjava-core:$rxjavaVersion"
 
 }
 
@@ -71,27 +69,25 @@ Please edit the details below.
  */
 def configurePom(def pom) {
   pom.project {
-    description 'Description of your module here'
+    description 'RxJava module for Vert.x. Adapts Vert.x APIs into a form easily usable with RxJava'
     inceptionYear '2013'
     packaging 'zip'
-    url 'Your project url'
+    url 'https://github.com/vert-x/mod-rxvertx.git'
 
     developers {
       developer {
-        id 'developer id (e.g. github username)'
-        name 'developer name'
-        email 'developer email'
+        id 'purplefox'
       }
     }
 
     scm {
-      url 'url to your repo - e.g. github repo url'
+      url 'https://github.com/vert-x/mod-rxvertx.git'
     }
 
     licenses {
       license {
-        name 'The name of the license used, e.g.: The Apache Software License, Version 2.0'
-        url 'URl to the license, e.g.: http://www.apache.org/licenses/LICENSE-2.0.txt'
+        name 'The Apache Software License, Version 2.0'
+        url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
         distribution 'repo'
       }
     }
