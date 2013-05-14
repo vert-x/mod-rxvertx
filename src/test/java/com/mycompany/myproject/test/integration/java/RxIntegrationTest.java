@@ -18,6 +18,7 @@ package com.mycompany.myproject.test.integration.java;
  */
 
 import io.vertx.rxcore.eventbus.RxEventBus;
+import io.vertx.rxcore.eventbus.RxMessage;
 import org.junit.Test;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.eventbus.Message;
@@ -33,17 +34,17 @@ public class RxIntegrationTest extends TestVerticle {
 
   @Test
   public void testSimpleSubscribeReply() {
-    vertx.eventBus().registerHandler("foo", new Handler<Message<String>>() {
+    RxEventBus rxEventBus = new RxEventBus(vertx.eventBus());
+    rxEventBus.registerHandler("foo").subscribe(new Action1<RxMessage<String>>() {
       @Override
-      public void handle(Message<String> message) {
+      public void call(RxMessage<String> message) {
         message.reply("pong!");
       }
     });
-    RxEventBus rxEventBus = new RxEventBus(vertx.eventBus());
-    Observable<Message<String>> obs = rxEventBus.send("foo", "ping!");
-    obs.subscribe(new Action1<Message<String>>() {
+    Observable<RxMessage<String>> obs = rxEventBus.send("foo", "ping!");
+    obs.subscribe(new Action1<RxMessage<String>>() {
       @Override
-      public void call(Message<String> message) {
+      public void call(RxMessage<String> message) {
         assertEquals("pong!", message.body());
         testComplete();
       }
@@ -55,24 +56,24 @@ public class RxIntegrationTest extends TestVerticle {
 //  @Test
 //  // Send some messages in series - i.e. wait for result of previous one before sending next one
 //  public void testSimpleSerial() {
-//    vertx.eventBus().registerHandler("foo", new Handler<Message<String>>() {
+//    vertx.eventBus().registerHandler("foo", new Handler<RxRxMessage<String>>() {
 //      @Override
-//      public void handle(Message<String> message) {
+//      public void handle(RxRxMessage<String> message) {
 //        message.reply("pong!");
 //      }
 //    });
 //
 //    final RxEventBus rxEventBus = new RxEventBus(vertx.eventBus());
 //
-//    Observable<Message<String>> obs1 = rxEventBus.send("foo", "ping!");
-//    Observable<Message<String>> obs2 = rxEventBus.send("foo", "ping!");
-//    Observable<Message<String>> obs3 = rxEventBus.send("foo", "ping!");
+//    Observable<RxMessage<String>> obs1 = rxEventBus.send("foo", "ping!");
+//    Observable<RxMessage<String>> obs2 = rxEventBus.send("foo", "ping!");
+//    Observable<RxMessage<String>> obs3 = rxEventBus.send("foo", "ping!");
 //
-//    Observable<Message<String>> concatenated = Observable.concat(obs1, obs2, obs3);
+//    Observable<RxMessage<String>> concatenated = Observable.concat(obs1, obs2, obs3);
 //
-//    concatenated.subscribe(new Action1<Message<String>>() {
+//    concatenated.subscribe(new Action1<RxMessage<String>>() {
 //      @Override
-//      public void call(Message<String> message) {
+//      public void call(RxMessage<String> message) {
 //        assertEquals("pong!", message.body());
 //        testComplete();
 //      }
@@ -82,32 +83,31 @@ public class RxIntegrationTest extends TestVerticle {
   @Test
   // Send some messages in series where next message sent is function of reply from previous message
   public void testSerial() {
-    vertx.eventBus().registerHandler("foo", new Handler<Message<String>>() {
+    final RxEventBus rxEventBus = new RxEventBus(vertx.eventBus());
+
+    rxEventBus.registerHandler("foo").subscribe(new Action1<RxMessage<String>>() {
       @Override
-      public void handle(Message<String> message) {
-        // just echo back
+      public void call(RxMessage<String> message) {
         message.reply(message.body());
       }
     });
 
-    final RxEventBus rxEventBus = new RxEventBus(vertx.eventBus());
-
-    Observable<Message<String>> obs1 = rxEventBus.send("foo", "ping1");
-    Observable<Message<String>> obs2 = obs1.mapMany(new Func1<Message<String>, Observable<Message<String>>>() {
+    Observable<RxMessage<String>> obs1 = rxEventBus.send("foo", "ping1");
+    Observable<RxMessage<String>> obs2 = obs1.mapMany(new Func1<RxMessage<String>, Observable<RxMessage<String>>>() {
       @Override
-      public Observable<Message<String>> call(Message<String> reply) {
+      public Observable<RxMessage<String>> call(RxMessage<String> reply) {
         return rxEventBus.send("foo", reply.body() + "ping2");
       }
     });
-    Observable<Message<String>> obs3 = obs2.mapMany(new Func1<Message<String>, Observable<Message<String>>>() {
+    Observable<RxMessage<String>> obs3 = obs2.mapMany(new Func1<RxMessage<String>, Observable<RxMessage<String>>>() {
       @Override
-      public Observable<Message<String>> call(Message<String> reply) {
+      public Observable<RxMessage<String>> call(RxMessage<String> reply) {
         return rxEventBus.send("foo", reply.body() + "ping3");
       }
     });
-    obs3.subscribe(new Action1<Message<String>>() {
+    obs3.subscribe(new Action1<RxMessage<String>>() {
       @Override
-      public void call(Message<String> message) {
+      public void call(RxMessage<String> message) {
         assertEquals("ping1ping2ping3", message.body());
         testComplete();
       }
@@ -118,49 +118,49 @@ public class RxIntegrationTest extends TestVerticle {
   @Test
   // Send some messages in parallel and wait for all replies before doing something
   public void testGather() {
-    vertx.eventBus().registerHandler("foo", new Handler<Message<String>>() {
+
+    final RxEventBus rxEventBus = new RxEventBus(vertx.eventBus());
+
+    rxEventBus.registerHandler("foo").subscribe(new Action1<RxMessage<String>>() {
       @Override
-      public void handle(Message<String> message) {
+      public void call(RxMessage<String> message) {
         message.reply("pong!");
       }
     });
 
-    final RxEventBus rxEventBus = new RxEventBus(vertx.eventBus());
+    Observable<RxMessage<String>> obs1 = rxEventBus.send("foo", "ping!");
+    Observable<RxMessage<String>> obs2 = rxEventBus.send("foo", "ping!");
+    Observable<RxMessage<String>> obs3 = rxEventBus.send("foo", "ping!");
+    Observable<RxMessage<String>> merged = Observable.merge(obs1, obs2, obs3);
 
-    Observable<Message<String>> obs1 = rxEventBus.send("foo", "ping!");
-    Observable<Message<String>> obs2 = rxEventBus.send("foo", "ping!");
-    Observable<Message<String>> obs3 = rxEventBus.send("foo", "ping!");
-    Observable<Message<String>> merged = Observable.merge(obs1, obs2, obs3);
-
-    merged.takeLast(1).subscribe(new Action1<Message<String>>() {
+    merged.takeLast(1).subscribe(new Action1<RxMessage<String>>() {
       @Override
-      public void call(Message<String> message) {
+      public void call(RxMessage<String> message) {
         assertEquals("pong!", message.body());
         testComplete();
       }
     });
-
   }
 
   @Test
   // Send some messages in parallel and return result of concatenating all the messages
   public void testConcatResults() {
-    vertx.eventBus().registerHandler("foo", new Handler<Message<String>>() {
+    final RxEventBus rxEventBus = new RxEventBus(vertx.eventBus());
+
+    rxEventBus.registerHandler("foo").subscribe(new Action1<RxMessage<String>>() {
       @Override
-      public void handle(Message<String> message) {
+      public void call(RxMessage<String> message) {
         message.reply("pong!");
       }
     });
 
-    final RxEventBus rxEventBus = new RxEventBus(vertx.eventBus());
-
-    Observable<Message<String>> obs1 = rxEventBus.send("foo", "ping!");
-    Observable<Message<String>> obs2 = rxEventBus.send("foo", "ping!");
-    Observable<Message<String>> obs3 = rxEventBus.send("foo", "ping!");
-    Observable<Message<String>> merged = Observable.merge(obs1, obs2, obs3);
-    Observable<String> result = Observable.reduce(merged, "", new Func2<String, Message<String>, String>() {
+    Observable<RxMessage<String>> obs1 = rxEventBus.send("foo", "ping!");
+    Observable<RxMessage<String>> obs2 = rxEventBus.send("foo", "ping!");
+    Observable<RxMessage<String>> obs3 = rxEventBus.send("foo", "ping!");
+    Observable<RxMessage<String>> merged = Observable.merge(obs1, obs2, obs3);
+    Observable<String> result = Observable.reduce(merged, "", new Func2<String, RxMessage<String>, String>() {
       @Override
-      public String call(String accum, Message<String> reply) {
+      public String call(String accum, RxMessage<String> reply) {
         return accum + reply.body();
       }
     });
@@ -179,17 +179,69 @@ public class RxIntegrationTest extends TestVerticle {
   public void testSimpleRegisterHandler() {
     final RxEventBus rxEventBus = new RxEventBus(vertx.eventBus());
 
-    Observable<Message<String>> obs = rxEventBus.registerHandler("foo");
+    Observable<RxMessage<String>> obs = rxEventBus.registerHandler("foo");
 
-    obs.subscribe(new Action1<Message<String>>() {
+    obs.subscribe(new Action1<RxMessage<String>>() {
       @Override
-      public void call(Message<String> message) {
+      public void call(RxMessage<String> message) {
         assertEquals("hello", message.body());
         testComplete();
       }
     });
 
     vertx.eventBus().send("foo", "hello");
+  }
+
+  @Test
+  public void testReplyToReply() {
+    final RxEventBus rxEventBus = new RxEventBus(vertx.eventBus());
+
+    Observable<RxMessage<String>> obsReply1 = rxEventBus.registerHandler("foo");
+
+    Observable<RxMessage<String>> obsReply2 = obsReply1.mapMany(new Func1<RxMessage<String>, Observable<RxMessage<String>>>() {
+      @Override
+      public Observable<RxMessage<String>> call(RxMessage<String> stringRxMessage) {
+        // Reply to the message
+        assertEquals("hello1", stringRxMessage.body());
+        return stringRxMessage.reply("goodday1");
+      }
+    });
+
+    Observable<RxMessage<String>> obsReply3 = obsReply2.mapMany(new Func1<RxMessage<String>, Observable<RxMessage<String>>>() {
+      @Override
+      public Observable<RxMessage<String>> call(RxMessage<String> stringRxMessage) {
+        // Reply to the reply!
+        assertEquals("hello2", stringRxMessage.body());
+        return stringRxMessage.reply("goodday2");
+      }
+    });
+    obsReply3.subscribe(new Action1<RxMessage<String>>() {
+      @Override
+      public void call(RxMessage<String> stringRxMessage) {
+      }
+    });
+
+    Observable<RxMessage<String>> obsSend1 = rxEventBus.send("foo", "hello1");
+
+    Observable<RxMessage<String>> obsSend2 = obsSend1.mapMany(new Func1<RxMessage<String>, Observable<RxMessage<String>>>() {
+      @Override
+      public Observable<RxMessage<String>> call(RxMessage<String> stringRxMessage) {
+        // The first reply
+        assertEquals("goodday1", stringRxMessage.body());
+        // Now reply to the reply
+        return stringRxMessage.reply("hello2");
+      }
+    });
+
+    obsSend2.subscribe(new Action1<RxMessage<String>>() {
+      @Override
+      public void call(RxMessage<String> stringRxMessage) {
+        // The reply to the reply
+        assertEquals("goodday2", stringRxMessage.body());
+        testComplete();
+      }
+    });
+
   }
 
 

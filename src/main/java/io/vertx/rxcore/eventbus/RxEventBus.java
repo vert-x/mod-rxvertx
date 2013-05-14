@@ -3,8 +3,11 @@ package io.vertx.rxcore.eventbus;
 import io.vertx.rxcore.impl.VertxObservable;
 import io.vertx.rxcore.impl.VertxSubscription;
 import org.vertx.java.core.Handler;
+import org.vertx.java.core.buffer.Buffer;
 import org.vertx.java.core.eventbus.EventBus;
 import org.vertx.java.core.eventbus.Message;
+import org.vertx.java.core.json.JsonArray;
+import org.vertx.java.core.json.JsonObject;
 import rx.Observable;
 import rx.Observer;
 import rx.Subscription;
@@ -35,48 +38,112 @@ public class RxEventBus {
     this.eventBus = eventBus;
   }
 
-  public Observable<Message<String>> send(String address, String msg) {
+  public <T> Observable<RxMessage<T>> send(String address, String msg) {
+    return doSend(address, msg);
+  }
 
-    final VertxSubscription<Message<String>> sub = new VertxSubscription<>();
+  public <T> Observable<RxMessage<T>> send(String address, JsonObject msg) {
+    return doSend(address, msg);
+  }
 
-    Observable<Message<String>> obs = new VertxObservable<>(new Func1<Observer<Message<String>>, Subscription>() {
+  public <T> Observable<RxMessage<T>> send(String address, JsonArray msg) {
+    return doSend(address, msg);
+  }
+
+  public <T> Observable<RxMessage<T>> send(String address, Buffer msg) {
+    return doSend(address, msg);
+  }
+
+  public <T> Observable<RxMessage<T>> send(String address, byte[] msg) {
+    return doSend(address, msg);
+  }
+
+  public <T> Observable<RxMessage<T>> send(String address, Integer msg) {
+    return doSend(address, msg);
+  }
+
+  public <T> Observable<RxMessage<T>> send(String address, Long msg) {
+    return doSend(address, msg);
+  }
+
+  public <T> Observable<RxMessage<T>> send(String address, Float msg) {
+    return doSend(address, msg);
+  }
+
+  public <T> Observable<RxMessage<T>> send(String address, Double msg) {
+    return doSend(address, msg);
+  }
+
+  public <T> Observable<RxMessage<T>> send(String address, Boolean msg) {
+    return doSend(address, msg);
+  }
+
+  public <T> Observable<RxMessage<T>> send(String address, Short msg) {
+    return doSend(address, msg);
+  }
+
+  public <T> Observable<RxMessage<T>> send(String address, Character msg) {
+    return doSend(address, msg);
+  }
+
+  public <T> Observable<RxMessage<T>> send(String address, Byte msg) {
+    return doSend(address, msg);
+  }
+
+  public <T> Observable<RxMessage<T>> registerLocalHandler(final String address) {
+    return registerHandler(address, true);
+  }
+
+  public <T> Observable<RxMessage<T>> registerHandler(final String address) {
+    return registerHandler(address, false);
+  }
+
+  private <T> Observable<RxMessage<T>> doSend(String address, Object msg) {
+    final VertxSubscription<RxMessage<T>> sub = new VertxSubscription<>();
+
+    Observable<RxMessage<T>> obs = new VertxObservable<>(new Func1<Observer<RxMessage<T>>, Subscription>() {
       @Override
-      public Subscription call(Observer<Message<String>> replyObserver) {
+      public Subscription call(Observer<RxMessage<T>> replyObserver) {
         sub.setObserver(replyObserver);
         return sub;
       }
     });
 
-    eventBus.send(address, msg, new Handler<Message<String>>() {
+    eventBus.send(address, msg, new Handler<Message>() {
       @Override
-      public void handle(Message<String> reply) {
-        sub.handleResult(reply);
+      public void handle(Message reply) {
+        sub.handleResult(new RxMessage<T>(reply));
+        sub.complete();
       }
     });
 
     return obs;
   }
 
-  public Observable<Message<String>> registerHandler(final String address) {
+  private <T> Observable<RxMessage<T>> registerHandler(final String address, boolean local) {
 
-    final VertxSubscription<Message<String>> sub = new VertxSubscription<>();
+    final VertxSubscription<RxMessage<T>> sub = new VertxSubscription<>();
 
-    Observable<Message<String>> obs = new VertxObservable<>(new Func1<Observer<Message<String>>, Subscription>() {
+    Observable<RxMessage<T>> obs = new VertxObservable<>(new Func1<Observer<RxMessage<T>>, Subscription>() {
       @Override
-      public Subscription call(Observer<Message<String>> replyObserver) {
+      public Subscription call(Observer<RxMessage<T>> replyObserver) {
         sub.setObserver(replyObserver);
         return sub;
       }
     });
 
-    final Handler<Message<String>> handler = new Handler<Message<String>>() {
+    final Handler<Message<T>> handler = new Handler<Message<T>>() {
       @Override
-      public void handle(Message<String> reply) {
-        sub.handleResult(reply);
+      public void handle(Message<T> reply) {
+        sub.handleResult(new RxMessage<T>(reply));
       }
     };
 
-    eventBus.registerHandler(address, handler);
+    if (local) {
+      eventBus.registerLocalHandler(address, handler);
+    } else {
+      eventBus.registerHandler(address, handler);
+    }
 
     sub.setOnUnsubscribe(new Runnable() {
       public void run() {
@@ -86,6 +153,5 @@ public class RxEventBus {
 
     return obs;
   }
-
 
 }

@@ -24,7 +24,6 @@ import rx.Subscription;
 public class VertxSubscription<T> implements Subscription {
 
   private Observer<T> replyObserver;
-  private T result;
   private Runnable onUnsubscribe;
 
   public void setOnUnsubscribe(Runnable onUnsubscribe) {
@@ -33,22 +32,18 @@ public class VertxSubscription<T> implements Subscription {
 
   public void setObserver(Observer<T> replyObserver) {
     this.replyObserver = replyObserver;
-    if (result != null) {
-      // Result came in before it was subscribed to
-      sendResult(result);
-      result = null;
-    }
   }
 
   public void handleResult(T message) {
     if (replyObserver != null) {
-      sendResult(message);
+      replyObserver.onNext(message);
     }
   }
 
-  public void sendResult(T message) {
-    replyObserver.onNext(message);
-    replyObserver.onCompleted();
+  public void complete() {
+    if (replyObserver != null) {
+      replyObserver.onCompleted();
+    }
   }
 
   @Override
@@ -60,8 +55,9 @@ public class VertxSubscription<T> implements Subscription {
         t.printStackTrace(); // FIXME
       }
     }
-    replyObserver.onCompleted();
-    replyObserver = null;
-
+    if (replyObserver != null) {
+      replyObserver.onCompleted();
+      replyObserver = null;
+    }
   }
 }
