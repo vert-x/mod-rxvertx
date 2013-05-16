@@ -69,6 +69,7 @@ Please edit the details below.
  */
 def configurePom(def pom) {
   pom.project {
+    name rootProject.name
     description 'RxJava module for Vert.x. Adapts Vert.x APIs into a form easily usable with RxJava'
     inceptionYear '2013'
     packaging 'zip'
