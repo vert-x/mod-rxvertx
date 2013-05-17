@@ -30,7 +30,7 @@ import rx.util.functions.Func2;
 
 import static org.vertx.testtools.VertxAssert.*;
 
-public class RxIntegrationTest extends TestVerticle {
+public class EventBusIntegrationTest extends TestVerticle {
 
   @Test
   public void testSimpleSubscribeReply() {

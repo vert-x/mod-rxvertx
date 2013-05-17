@@ -46,6 +46,16 @@ public class VertxSubscription<T> implements Subscription {
     }
   }
 
+  public void failed(Throwable t) {
+    if (t instanceof Exception) {
+      if (replyObserver != null) {
+        replyObserver.onError((Exception)t);
+      }
+    } else {
+      t.printStackTrace(); // FIXME - better logging
+    }
+  }
+
   @Override
   public void unsubscribe() {
     if (onUnsubscribe != null) {
