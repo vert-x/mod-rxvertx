@@ -17,11 +17,9 @@ package io.vertx.rxcore.test.integration.java;
  * @author <a href="http://tfox.org">Tim Fox</a>
  */
 
-import io.vertx.rxcore.eventbus.RxEventBus;
-import io.vertx.rxcore.eventbus.RxMessage;
+import io.vertx.rxcore.java.eventbus.RxEventBus;
+import io.vertx.rxcore.java.eventbus.RxMessage;
 import org.junit.Test;
-import org.vertx.java.core.Handler;
-import org.vertx.java.core.eventbus.Message;
 import org.vertx.testtools.TestVerticle;
 import rx.Observable;
 import rx.util.functions.Action1;

@@ -1,9 +1,4 @@
-package io.vertx.rxcore.impl;
-
-import rx.Observable;
-import rx.Observer;
-import rx.Subscription;
-import rx.util.functions.Func1;
+package io.vertx.rxcore.groovy.eventbus
 
 /*
  * Copyright 2013 Red Hat, Inc.
@@ -22,8 +17,14 @@ import rx.util.functions.Func1;
  *
  * @author <a href="http://tfox.org">Tim Fox</a>
  */
-public class VertxObservable<T> extends Observable<T> {
-  public VertxObservable(Func1<Observer<T>, Subscription> func) {
-    super(func);
+import org.vertx.groovy.core.eventbus.EventBus
+
+class RxEventBus {
+
+  org.vertx.java.core.eventbus.EventBus jEventBus
+
+  RxEventBus(EventBus eventBus) {
+    jEventBus = eventBus.javaEventBus()
   }
 }
+
