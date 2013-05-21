@@ -3,7 +3,7 @@
 
   "description":"Vert.x module that adapts the Vert.x core APIs so they are directly usable with RxJava. This allows Vert.x asynchronous operations and streams to be easily composable.",
   "licenses": ["The Apache Software License Version 2.0"],
-  "author": "pertermd, purplefox",
+  "author": "petermd, purplefox",
   "keywords": ["rx", "rxjava", "core", "apis", "promises", "observable", "compose", "composable", "reactive", "extensions", "reactive extensions", "reactive-extensions"],
   "homepage": "https://github.com/vert-x/mod-rxvertx"
 }
