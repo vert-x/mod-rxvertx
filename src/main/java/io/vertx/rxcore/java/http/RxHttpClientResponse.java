@@ -7,6 +7,7 @@ import org.vertx.java.core.Handler;
 import org.vertx.java.core.MultiMap;
 import org.vertx.java.core.buffer.Buffer;
 import org.vertx.java.core.http.HttpClientResponse;
+import org.vertx.java.core.net.NetSocket;
 import rx.Observable;
 
 /** Rx wrapper for HttpClientResponse 
@@ -53,6 +54,11 @@ public class RxHttpClientResponse implements HttpClientResponse {
 
   public HttpClientResponse bodyHandler(Handler<Buffer> bodyHandler) {
     throw new UnsupportedOperationException("Cannot access via Rx - use asObservable()");
+  }
+
+  @Override
+  public NetSocket netSocket() {
+    return nested.netSocket();
   }
 
   public HttpClientResponse dataHandler(Handler<Buffer> handler) {

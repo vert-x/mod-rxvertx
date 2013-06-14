@@ -95,7 +95,7 @@ public class RxHttpServerRequest implements HttpServerRequest {
     return nested.uploadHandler(uploadHandler);
   }
 
-  public Map<String, String> formAttributes() {
+  public MultiMap formAttributes() {
     return nested.formAttributes();
   }
 
