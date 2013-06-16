@@ -23,7 +23,7 @@ public class RxSupport {
   public static Func2<Buffer, Buffer, Buffer> mergeBuffers=new Func2<Buffer,Buffer,Buffer>() {
     public Buffer call(Buffer b1, Buffer b2) {
       b1.appendBuffer(b2);
-      return b2;
+      return b1;
     }
   };
     
