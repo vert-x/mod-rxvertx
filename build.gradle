@@ -77,7 +77,7 @@ def configurePom(def pom) {
     name rootProject.name
     description 'RxJava module for Vert.x. Adapts Vert.x APIs into a form easily usable with RxJava'
     inceptionYear '2013'
-    packaging 'zip'
+    packaging produceJar == 'false' ? 'pom' : 'jar'
     url 'https://github.com/vert-x/mod-rxvertx.git'
 
     developers {
