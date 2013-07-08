@@ -1,5 +1,6 @@
 package io.vertx.rxcore.java.http;
 
+import io.vertx.rxcore.RxSupport;
 import io.vertx.rxcore.java.impl.MemoizeHandler;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.MultiMap;
@@ -108,13 +109,11 @@ public class RxHttpClient {
     };
     
     HttpClientRequest req=core.request(method,uri,rh);
-
       // if req fails, notify observers
       req.exceptionHandler(new Handler<Throwable>() {
           @Override
           public void handle(Throwable event) {
-              // wrap the throwable in a RuntimeException
-              rh.fail(new RuntimeException(event));
+              rh.fail(RxSupport.toException(event));
           }
       });
     
