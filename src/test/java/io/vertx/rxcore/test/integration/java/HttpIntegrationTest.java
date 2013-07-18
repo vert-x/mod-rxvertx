@@ -4,13 +4,15 @@ import java.util.*;
 
 import io.vertx.rxcore.RxSupport;
 import io.vertx.rxcore.java.http.*;
+
 import org.junit.Test;
 import org.vertx.java.core.buffer.Buffer;
+import org.vertx.java.core.http.HttpClientRequest;
 import org.vertx.testtools.TestVerticle;
 import rx.Observable;
+import rx.Observer;
 import rx.util.functions.*;
-import static org.vertx.testtools.VertxAssert.assertEquals;
-import static org.vertx.testtools.VertxAssert.testComplete;
+import static org.vertx.testtools.VertxAssert.*;
 
 /** HttpIntegrationTest
  * @author <a href="http://github.com/petermd">Peter McDonnell</a>
@@ -89,6 +91,78 @@ public class HttpIntegrationTest extends TestVerticle {
         }
       });
   }
+  
+ /*
+  * Verify that if underlying httpclient throws an exception, 
+  * the observer is notified. 
+  */
+  @Test
+  public void testHttpClientThrowsException() {	
+	// set the port to an invalid port to cause the underlying client to throw an exception
+	final int invalidPort = 90080;
+    RxHttpClient client=new RxHttpClient(vertx.createHttpClient().setHost("localhost").setPort(invalidPort));
+    Observable<RxHttpClientResponse> observable = client.request("GET", "/whatever-random", new Action1<HttpClientRequest>() {		
+		@Override
+		public void call(HttpClientRequest request) {
+			request.end();
+		}
+	});
+    
+    observable.subscribe(new Observer<RxHttpClientResponse>() {		
+		@Override
+		public void onNext(RxHttpClientResponse args) {
+			fail("onNext() shouldnt be invoked");			
+		}
+		
+		@Override
+		public void onError(Exception e) {
+			assertNotNull(e);
+			System.out.println("Exception was thrown and handled as expected, exception message: " + e.getMessage());
+		}
+		
+		@Override
+		public void onCompleted() {
+			fail("onCompleted() shouldnt be invoked");			
+		}
+	});
+    testComplete();
+  }
+  
+  /*
+   * Verify that if the requestBuilder throws an exception, 
+   * the observer is notified accordingly. 
+   */
+   @Test
+   public void testHttpClientRequestBuilderThrowsException() {	
+     RxHttpClient client = new RxHttpClient(vertx.createHttpClient().setHost("localhost").setPort(8080));
+     Observable<RxHttpClientResponse> observable = client.request("GET", "/whatever-random", new Action1<HttpClientRequest>() {		
+ 		@Override
+ 		public void call(HttpClientRequest request) {
+ 			throw new RuntimeException("Builder Exception");
+ 		}
+ 	});
+     
+     observable.subscribe(new Observer<RxHttpClientResponse>() {		
+ 		@Override
+ 		public void onNext(RxHttpClientResponse args) {
+ 			fail("onNext() shouldnt be invoked");			
+ 		}
+ 		
+ 		@Override
+ 		public void onError(Exception e) {
+ 			assertNotNull(e);
+ 			assertEquals(RuntimeException.class, e.getClass());
+ 			assertEquals("Builder Exception", e.getMessage());
+ 			System.out.println("Exception was thrown and handled as expected, exception message: " + e.getMessage());
+ 		}
+ 		
+ 		@Override
+ 		public void onCompleted() {
+ 			fail("onCompleted() shouldnt be invoked");			
+ 		}
+ 	});
+     testComplete();
+   }
 
   @Test
   public void testWebSocket() {
