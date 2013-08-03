@@ -77,7 +77,7 @@ public abstract class SingleObserverHandler<R, T> implements Handler<T> {
   }
   
   /** Fail the handler - used to handle errors before the handler is called */
-  public void fail(Exception e) {
+  public void fail(Throwable e) {
     
     Observer<R> ob=obRef.get();
 

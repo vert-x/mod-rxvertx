@@ -2,7 +2,6 @@ package io.vertx.rxcore.java.http;
 
 import java.net.InetSocketAddress;
 import java.net.URI;
-import java.util.Map;
 import javax.net.ssl.SSLPeerUnverifiedException;
 import javax.security.cert.X509Certificate;
 
@@ -88,6 +87,10 @@ public class RxHttpServerRequest implements HttpServerRequest {
   public NetSocket netSocket() {
     // TODO: Provider wrapper
     return nested.netSocket();
+  }
+
+  public HttpServerRequest expectMultiPart(boolean expect) {
+    return nested.expectMultiPart(expect);
   }
 
   public HttpServerRequest uploadHandler(Handler<HttpServerFileUpload> uploadHandler) {

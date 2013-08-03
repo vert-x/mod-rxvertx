@@ -113,7 +113,7 @@ public class RxHttpClient {
       req.exceptionHandler(new Handler<Throwable>() {
           @Override
           public void handle(Throwable event) {
-              rh.fail(RxSupport.toException(event));
+              rh.fail(event);
           }
       });
     

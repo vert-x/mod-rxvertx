@@ -22,6 +22,6 @@ public class AsyncResultMemoizeHandler<T> extends MemoizeHandler<T, AsyncResult<
     if (value.succeeded()) 
       complete(value.result());
     else
-      fail(RxSupport.toException(value.cause()));
+      fail(value.cause());
   }
 }

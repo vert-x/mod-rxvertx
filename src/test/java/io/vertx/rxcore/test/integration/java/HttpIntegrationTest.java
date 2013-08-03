@@ -115,7 +115,7 @@ public class HttpIntegrationTest extends TestVerticle {
 		}
 		
 		@Override
-		public void onError(Exception e) {
+		public void onError(Throwable e) {
 			assertNotNull(e);
 			System.out.println("Exception was thrown and handled as expected, exception message: " + e.getMessage());
 		}
@@ -149,7 +149,7 @@ public class HttpIntegrationTest extends TestVerticle {
  		}
  		
  		@Override
- 		public void onError(Exception e) {
+ 		public void onError(Throwable e) {
  			assertNotNull(e);
  			assertEquals(RuntimeException.class, e.getClass());
  			assertEquals("Builder Exception", e.getMessage());

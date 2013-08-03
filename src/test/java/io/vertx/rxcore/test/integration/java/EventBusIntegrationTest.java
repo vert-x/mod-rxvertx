@@ -22,11 +22,9 @@ import io.vertx.rxcore.java.eventbus.RxMessage;
 import org.junit.Test;
 import org.vertx.testtools.TestVerticle;
 import rx.Observable;
-import rx.util.functions.Action1;
-import rx.util.functions.Func1;
-import rx.util.functions.Func2;
-
-import static org.vertx.testtools.VertxAssert.*;
+import rx.util.functions.*;
+import static org.vertx.testtools.VertxAssert.assertEquals;
+import static org.vertx.testtools.VertxAssert.testComplete;
 
 public class EventBusIntegrationTest extends TestVerticle {
 
@@ -50,33 +48,38 @@ public class EventBusIntegrationTest extends TestVerticle {
   }
 
 
-// Unfortunately concat in RxJava is currently blocking so this won't work in Vert.x https://github.com/Netflix/RxJava/issues/270
-//  @Test
-//  // Send some messages in series - i.e. wait for result of previous one before sending next one
-//  public void testSimpleSerial() {
-//    vertx.eventBus().registerHandler("foo", new Handler<RxRxMessage<String>>() {
-//      @Override
-//      public void handle(RxRxMessage<String> message) {
-//        message.reply("pong!");
-//      }
-//    });
-//
-//    final RxEventBus rxEventBus = new RxEventBus(vertx.eventBus());
-//
-//    Observable<RxMessage<String>> obs1 = rxEventBus.send("foo", "ping!");
-//    Observable<RxMessage<String>> obs2 = rxEventBus.send("foo", "ping!");
-//    Observable<RxMessage<String>> obs3 = rxEventBus.send("foo", "ping!");
-//
-//    Observable<RxMessage<String>> concatenated = Observable.concat(obs1, obs2, obs3);
-//
-//    concatenated.subscribe(new Action1<RxMessage<String>>() {
-//      @Override
-//      public void call(RxMessage<String> message) {
-//        assertEquals("pong!", message.body());
-//        testComplete();
-//      }
-//    });
-//  }
+  @Test
+  // Send some messages in series - i.e. wait for result of previous one before sending next one
+  // PMCD: Reenabling as concat is now non-blocking. However, this test does not work as intended, because the 
+  //       Observable returned by RxEventBus.send() does not wait for the subscribe to submit the message all
+  //       three sends() are issue in parallel.
+  //       
+  public void testSimpleSerial() {
+    final RxEventBus rxEventBus = new RxEventBus(vertx.eventBus());
+
+    rxEventBus.registerHandler("foo").subscribe(new Action1<RxMessage<String>>() {
+      @Override
+      public void call(RxMessage<String> message) {
+        System.out.println("serial-foo["+message.body()+"]");
+        message.reply("pong!");
+      }
+    });
+
+    Observable<RxMessage<String>> obs1 = rxEventBus.send("foo", "ping!");
+    Observable<RxMessage<String>> obs2 = rxEventBus.send("foo", "ping!");
+    Observable<RxMessage<String>> obs3 = rxEventBus.send("foo", "ping!");
+
+    Observable<RxMessage<String>> concatenated = Observable.concat(obs1, obs2, obs3);
+
+    concatenated.subscribe(new Action1<RxMessage<String>>() {
+      @Override
+      public void call(RxMessage<String> message) {
+        System.out.println("serial-resp["+message.body()+"]");
+        assertEquals("pong!", message.body());
+        testComplete();
+      }
+    });
+  }
 
   @Test
   // Send some messages in series where next message sent is function of reply from previous message

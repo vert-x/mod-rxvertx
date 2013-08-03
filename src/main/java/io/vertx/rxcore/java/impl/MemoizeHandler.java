@@ -24,7 +24,7 @@ public class MemoizeHandler<R,T> implements Handler<T> {
   private R result;
   
   /** Error */
-  private Exception error;
+  private Throwable error;
   
   /** Reference to active observer */
   private AtomicReference<Observer<R>> obRef=new AtomicReference<Observer<R>>();
@@ -101,7 +101,7 @@ public class MemoizeHandler<R,T> implements Handler<T> {
   }
   
   /** Dispatch failure */
-  public void fail(Exception e) {
+  public void fail(Throwable e) {
     this.error=e;
     this.state=State.FAILED;
 

@@ -65,7 +65,7 @@ public class RxSupport {
         rs.dataHandler(this);
         rs.exceptionHandler(new Handler<Throwable>() {
           public void handle(Throwable t) {
-            fail(toException(t));
+            fail(t);
           }
         });
         rs.endHandler(new Handler<Void>() {
@@ -88,16 +88,6 @@ public class RxSupport {
     };
     
     return Observable.create(rh.subscribe);
-  }
-  
-  /** Convert a Throwable back to an exception */
-  public static Exception toException(Throwable t) {
-    if (t instanceof Exception) {
-      return (Exception)t;
-    } else {
-      // Ugly exception - wrapping may not even work..
-      return new RuntimeException("Internal error",t);
-    }
   }
   
   // JSON 

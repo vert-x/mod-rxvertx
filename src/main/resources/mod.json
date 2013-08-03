@@ -1,5 +1,5 @@
 {
-  "includes":"io.vertx~lang-groovy~2.0.0-CR2",
+  "includes":"io.vertx~lang-groovy~2.0.0-final",
 
   "description":"Vert.x module that adapts the Vert.x core APIs so they are directly usable with RxJava. This allows Vert.x asynchronous operations and streams to be easily composable.",
   "licenses": ["The Apache Software License Version 2.0"],

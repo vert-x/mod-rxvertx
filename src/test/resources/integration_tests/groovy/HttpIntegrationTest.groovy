@@ -7,8 +7,6 @@ import static org.vertx.testtools.VertxAssert.*
 
 def testSimpleGet() {
 
-// Commented out for now due to classloader issue with RxJava
-/*
   RxHttpServer server=new RxHttpServer(vertx.createHttpServer().toJavaServer())
   server.http().subscribe(
     { req -> 
@@ -38,8 +36,6 @@ def testSimpleGet() {
       {
         e -> println("http-client:request-failed:"+e);
       });
-*/
-  testComplete();
 }
 
 VertxTests.initialize(this)

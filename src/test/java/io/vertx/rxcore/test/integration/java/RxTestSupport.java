@@ -14,7 +14,7 @@ public class RxTestSupport {
     try {
       RxJavaPlugins.getInstance().registerErrorHandler(new RxJavaErrorHandler() {
         @Override 
-        public void handleError(Exception e) {
+        public void handleError(Throwable e) {
           System.err.println("Internal RxJava error (e="+e+")");
           e.printStackTrace(System.err);
         }
