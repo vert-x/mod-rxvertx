@@ -37,9 +37,9 @@ public class RxWebSocket<T extends WebSocket> implements WebSocket {
           total.addAndGet(1);
         }
       },
-      new Action1<Exception>() {
-        public void call(Exception e) {
-          rx.onError(e);
+      new Action1<Throwable>() {
+        public void call(Throwable t) {
+          rx.onError(t);
         }
       },
       new Action0() {

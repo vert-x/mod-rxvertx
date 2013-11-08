@@ -1,9 +1,6 @@
 package io.vertx.rxcore.java.impl;
 
 import rx.Observable;
-import rx.Observer;
-import rx.Subscription;
-import rx.util.functions.Func1;
 
 /*
  * Copyright 2013 Red Hat, Inc.
@@ -23,7 +20,7 @@ import rx.util.functions.Func1;
  * @author <a href="http://tfox.org">Tim Fox</a>
  */
 public class VertxObservable<T> extends Observable<T> {
-  public VertxObservable(Func1<Observer<T>, Subscription> func) {
+  public VertxObservable(Observable.OnSubscribeFunc func) {
     super(func);
   }
 }

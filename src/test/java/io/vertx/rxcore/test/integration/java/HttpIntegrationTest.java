@@ -179,7 +179,7 @@ public class HttpIntegrationTest extends TestVerticle {
         public void call(RxWebSocket s) {
           System.out.println("WebSocket:connected");
           s
-            .writeAsTextFrame(Observable.toObservable(seq))
+            .writeAsTextFrame(Observable.from(seq))
             .subscribe(RxTestSupport.traceNext,RxTestSupport.traceError,RxTestSupport.traceComplete);
           s.asObservable()
             .subscribe(

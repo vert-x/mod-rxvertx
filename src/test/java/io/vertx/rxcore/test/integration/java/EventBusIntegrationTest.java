@@ -31,7 +31,7 @@ public class EventBusIntegrationTest extends TestVerticle {
   @Test
   public void testSimpleSubscribeReply() {
     RxEventBus rxEventBus = new RxEventBus(vertx.eventBus());
-    rxEventBus.registerHandler("foo").subscribe(new Action1<RxMessage<String>>() {
+    rxEventBus.<String>registerHandler("foo").subscribe(new Action1<RxMessage<String>>() {
       @Override
       public void call(RxMessage<String> message) {
         message.reply("pong!");
@@ -57,7 +57,7 @@ public class EventBusIntegrationTest extends TestVerticle {
   public void testSimpleSerial() {
     final RxEventBus rxEventBus = new RxEventBus(vertx.eventBus());
 
-    rxEventBus.registerHandler("foo").subscribe(new Action1<RxMessage<String>>() {
+    rxEventBus.<String>registerHandler("foo").subscribe(new Action1<RxMessage<String>>() {
       @Override
       public void call(RxMessage<String> message) {
         System.out.println("serial-foo["+message.body()+"]");
@@ -86,7 +86,7 @@ public class EventBusIntegrationTest extends TestVerticle {
   public void testSerial() {
     final RxEventBus rxEventBus = new RxEventBus(vertx.eventBus());
 
-    rxEventBus.registerHandler("foo").subscribe(new Action1<RxMessage<String>>() {
+    rxEventBus.<String>registerHandler("foo").subscribe(new Action1<RxMessage<String>>() {
       @Override
       public void call(RxMessage<String> message) {
         message.reply(message.body());
@@ -122,7 +122,7 @@ public class EventBusIntegrationTest extends TestVerticle {
 
     final RxEventBus rxEventBus = new RxEventBus(vertx.eventBus());
 
-    rxEventBus.registerHandler("foo").subscribe(new Action1<RxMessage<String>>() {
+    rxEventBus.<String>registerHandler("foo").subscribe(new Action1<RxMessage<String>>() {
       @Override
       public void call(RxMessage<String> message) {
         message.reply("pong!");
@@ -148,7 +148,7 @@ public class EventBusIntegrationTest extends TestVerticle {
   public void testConcatResults() {
     final RxEventBus rxEventBus = new RxEventBus(vertx.eventBus());
 
-    rxEventBus.registerHandler("foo").subscribe(new Action1<RxMessage<String>>() {
+    rxEventBus.<String>registerHandler("foo").subscribe(new Action1<RxMessage<String>>() {
       @Override
       public void call(RxMessage<String> message) {
         message.reply("pong!");
@@ -159,7 +159,7 @@ public class EventBusIntegrationTest extends TestVerticle {
     Observable<RxMessage<String>> obs2 = rxEventBus.send("foo", "ping!");
     Observable<RxMessage<String>> obs3 = rxEventBus.send("foo", "ping!");
     Observable<RxMessage<String>> merged = Observable.merge(obs1, obs2, obs3);
-    Observable<String> result = Observable.reduce(merged, "", new Func2<String, RxMessage<String>, String>() {
+    Observable<String> result = merged.reduce("", new Func2<String, RxMessage<String>, String>() {
       @Override
       public String call(String accum, RxMessage<String> reply) {
         return accum + reply.body();

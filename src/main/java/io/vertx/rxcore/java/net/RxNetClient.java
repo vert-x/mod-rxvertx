@@ -48,9 +48,9 @@ public class RxNetClient {
   public Observable<RxNetSocket> connect(int port, String host) {
     final VertxSubscription<RxNetSocket> sub = new VertxSubscription<>();
 
-    Observable<RxNetSocket> connectObservable = new VertxObservable<>(new Func1<Observer<RxNetSocket>, Subscription>() {
+    Observable<RxNetSocket> connectObservable = new VertxObservable<>(new Observable.OnSubscribeFunc<RxNetSocket>() {
       @Override
-      public Subscription call(Observer<RxNetSocket> replyObserver) {
+      public Subscription onSubscribe(Observer<? super RxNetSocket> replyObserver) {
         sub.setObserver(replyObserver);
         return sub;
       }

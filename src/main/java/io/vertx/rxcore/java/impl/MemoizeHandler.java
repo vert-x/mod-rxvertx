@@ -3,11 +3,9 @@ package io.vertx.rxcore.java.impl;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.vertx.java.core.Handler;
-import rx.Observer;
-import rx.Subscription;
+import rx.*;
 import rx.subscriptions.Subscriptions;
 import rx.util.functions.Action0;
-import rx.util.functions.Func1;
 
 /** Subject that stores the result of a Handler and notfies all current and future Observers 
  * @author <a href="http://github.com/petermd">Peter McDonnell</a>
@@ -27,7 +25,7 @@ public class MemoizeHandler<R,T> implements Handler<T> {
   private Throwable error;
   
   /** Reference to active observer */
-  private AtomicReference<Observer<R>> obRef=new AtomicReference<Observer<R>>();
+  private AtomicReference<Observer<? super R>> obRef=new AtomicReference<Observer<? super R>>();
   
   /** Create new MemoizeHandler */
   public MemoizeHandler() {
@@ -37,8 +35,8 @@ public class MemoizeHandler<R,T> implements Handler<T> {
   }
   
   /** Subscription function */
-  public Func1<Observer<R>, Subscription> subscribe=new Func1<Observer<R>, Subscription>() {
-    public Subscription call(Observer<R> newObserver) {
+  public Observable.OnSubscribeFunc<R> subscribe=new Observable.OnSubscribeFunc<R>() {
+    public Subscription onSubscribe(Observer<? super R> newObserver) {
       // Check if complete
       switch(state) {
 
@@ -65,7 +63,7 @@ public class MemoizeHandler<R,T> implements Handler<T> {
   /** Unsubscribe action */
   public Action0 unsubscribe=new Action0() {
     public void call() {
-      Observer<R> ob=obRef.getAndSet(null);
+      Observer<? super R> ob=obRef.getAndSet(null);
       if (ob==null)
         throw new IllegalStateException("Unsubscribe without subscribe");
       // Unsubscribe triggers completed
@@ -78,7 +76,7 @@ public class MemoizeHandler<R,T> implements Handler<T> {
     this.result=value;
     this.state=State.COMPLETED;
 
-    Observer<R> ob=obRef.get();
+    Observer<? super R> ob=obRef.get();
     // Ignore if no active observer
     if (ob==null)
       return;
@@ -105,7 +103,7 @@ public class MemoizeHandler<R,T> implements Handler<T> {
     this.error=e;
     this.state=State.FAILED;
 
-    Observer<R> ob=obRef.get();
+    Observer<? super R> ob=obRef.get();
     // Ignore if no active observer
     if (ob==null)
       return;

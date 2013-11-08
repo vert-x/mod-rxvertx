@@ -42,9 +42,9 @@ public class RxSupport {
           total.addAndGet(buffer.length());
         }
       },
-      new Action1<Exception>() {
-        public void call(Exception e) {
-          rx.onError(e);
+      new Action1<Throwable>() {
+        public void call(Throwable t) {
+          rx.onError(t);
         }
       },
       new Action0() {

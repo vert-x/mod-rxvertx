@@ -22,14 +22,14 @@ import rx.Subscription;
  */
 public class VertxSubscription<T> implements Subscription {
 
-  private Observer<T> replyObserver;
+  private Observer<? super T> replyObserver;
   private Runnable onUnsubscribe;
 
   public void setOnUnsubscribe(Runnable onUnsubscribe) {
     this.onUnsubscribe = onUnsubscribe;
   }
 
-  public void setObserver(Observer<T> replyObserver) {
+  public void setObserver(Observer<? super T> replyObserver) {
     this.replyObserver = replyObserver;
   }
 

@@ -43,9 +43,9 @@ public class RxNetSocket {
     if (dataStream == null) {
       final VertxSubscription<Buffer> sub = new VertxSubscription<>();
 
-      dataStream = new VertxObservable<>(new Func1<Observer<Buffer>, Subscription>() {
+      dataStream = new VertxObservable<>(new Observable.OnSubscribeFunc<Buffer>() {
         @Override
-        public Subscription call(Observer<Buffer> replyObserver) {
+        public Subscription onSubscribe(Observer<? super Buffer> replyObserver) {
           sub.setObserver(replyObserver);
           return sub;
         }

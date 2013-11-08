@@ -2,14 +2,10 @@ package io.vertx.rxcore.java.net;
 
 import io.vertx.rxcore.java.impl.VertxObservable;
 import io.vertx.rxcore.java.impl.VertxSubscription;
-import org.vertx.java.core.AsyncResult;
-import org.vertx.java.core.AsyncResultHandler;
-import org.vertx.java.core.Handler;
+import org.vertx.java.core.*;
 import org.vertx.java.core.net.NetServer;
 import org.vertx.java.core.net.NetSocket;
-import rx.Observable;
-import rx.Observer;
-import rx.Subscription;
+import rx.*;
 import rx.util.functions.Func1;
 
 /*
@@ -45,9 +41,9 @@ public class RxNetServer {
     if (connectStream == null) {
       final VertxSubscription<RxNetSocket> sub = new VertxSubscription<>();
 
-      connectStream = new VertxObservable<>(new Func1<Observer<RxNetSocket>, Subscription>() {
+      connectStream = new VertxObservable<>(new Observable.OnSubscribeFunc<RxNetSocket>() {
         @Override
-        public Subscription call(Observer<RxNetSocket> replyObserver) {
+        public Subscription onSubscribe(Observer<? super RxNetSocket> replyObserver) {
           sub.setObserver(replyObserver);
           return sub;
         }
@@ -78,9 +74,9 @@ public class RxNetServer {
   public Observable<RxNetServer> listen(int port, String host) {
     final VertxSubscription<RxNetServer> sub = new VertxSubscription<>();
 
-    Observable<RxNetServer> obs = new VertxObservable<>(new Func1<Observer<RxNetServer>, Subscription>() {
+    Observable<RxNetServer> obs = new VertxObservable<>(new Observable.OnSubscribeFunc<RxNetServer>() {
       @Override
-      public Subscription call(Observer<RxNetServer> replyObserver) {
+      public Subscription onSubscribe(Observer<? super RxNetServer> replyObserver) {
         sub.setObserver(replyObserver);
         return sub;
       }
@@ -104,9 +100,9 @@ public class RxNetServer {
   public Observable<Void> close() {
     final VertxSubscription<Void> sub = new VertxSubscription<>();
 
-    Observable<Void> obs = new VertxObservable<>(new Func1<Observer<Void>, Subscription>() {
+    Observable<Void> obs = new VertxObservable<>(new Observable.OnSubscribeFunc<Void>() {
       @Override
-      public Subscription call(Observer<Void> replyObserver) {
+      public Subscription onSubscribe(Observer<? super Void> replyObserver) {
         sub.setObserver(replyObserver);
         return sub;
       }

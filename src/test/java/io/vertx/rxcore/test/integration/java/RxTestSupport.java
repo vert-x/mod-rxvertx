@@ -34,10 +34,10 @@ public class RxTestSupport {
     }
   };
   
-  public static Action1<Exception> traceError=new Action1<Exception>() {
-    public void call(Exception e) {
-      System.err.println("onError:"+e);
-      e.printStackTrace(System.err);
+  public static Action1<Throwable> traceError=new Action1<Throwable>() {
+    public void call(Throwable t) {
+      System.err.println("onError:"+t);
+      t.printStackTrace(System.err);
     }
   };
 

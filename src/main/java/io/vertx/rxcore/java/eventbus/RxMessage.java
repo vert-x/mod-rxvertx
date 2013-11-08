@@ -54,9 +54,9 @@ public class RxMessage<T> {
   public <T> Observable<RxMessage<T>> reply(Object message) {
     final VertxSubscription<RxMessage<T>> sub = new VertxSubscription<>();
 
-    Observable<RxMessage<T>> obs = new VertxObservable<>(new Func1<Observer<RxMessage<T>>, Subscription>() {
+    Observable<RxMessage<T>> obs = new VertxObservable<>(new Observable.OnSubscribeFunc<RxMessage<T>>() {
       @Override
-      public Subscription call(Observer<RxMessage<T>> replyObserver) {
+      public Subscription onSubscribe(Observer<? super RxMessage<T>> replyObserver) {
         sub.setObserver(replyObserver);
         return sub;
       }

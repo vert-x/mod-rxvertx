@@ -101,9 +101,9 @@ public class RxEventBus {
   private <T> Observable<RxMessage<T>> doSend(String address, Object msg) {
     final VertxSubscription<RxMessage<T>> sub = new VertxSubscription<>();
 
-    Observable<RxMessage<T>> obs = new VertxObservable<>(new Func1<Observer<RxMessage<T>>, Subscription>() {
+    Observable<RxMessage<T>> obs = new VertxObservable<>(new Observable.OnSubscribeFunc<RxMessage<T>>() {
       @Override
-      public Subscription call(Observer<RxMessage<T>> replyObserver) {
+      public Subscription onSubscribe(Observer<? super RxMessage<T>> replyObserver) {
         sub.setObserver(replyObserver);
         return sub;
       }
@@ -124,9 +124,9 @@ public class RxEventBus {
 
     final VertxSubscription<RxMessage<T>> sub = new VertxSubscription<>();
 
-    Observable<RxMessage<T>> obs = new VertxObservable<>(new Func1<Observer<RxMessage<T>>, Subscription>() {
+    Observable<RxMessage<T>> obs = new VertxObservable<>(new Observable.OnSubscribeFunc<RxMessage<T>>() {
       @Override
-      public Subscription call(Observer<RxMessage<T>> replyObserver) {
+      public Subscription onSubscribe(Observer<? super RxMessage<T>> replyObserver) {
         sub.setObserver(replyObserver);
         return sub;
       }
