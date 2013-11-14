@@ -52,12 +52,21 @@ dependencies {
   */
 
   compile "com.netflix.rxjava:rxjava-core:$rxjavaCoreVersion"
-  compile "com.netflix.rxjava:rxjava-groovy:$rxjavaGroovyVersion"
+  compile("com.netflix.rxjava:rxjava-groovy:$rxjavaGroovyVersion") {
+    exclude group:"org.codehaus.groovy", module:"groovy-all"
+  }
 
   // If you're creating Groovy compiled verticles you may need the following dependencies
   provided "org.codehaus.groovy:groovy-all:$groovyVersion"
   provided "io.vertx:lang-groovy:$groovyLangModVersion@jar"
+}
 
+configurations.all {
+  
+  // Force ${groovyVersion} for RxJava-Groovy
+  resolutionStrategy {
+    force "org.codehaus.groovy:groovy-all:$groovyVersion"
+  }
 }
 
 test {
