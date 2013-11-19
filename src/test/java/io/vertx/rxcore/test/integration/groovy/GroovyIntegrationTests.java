@@ -31,7 +31,7 @@ import org.vertx.testtools.TestVerticleInfo;
  *
  * You do not need to edit this file unless you want it to look for tests elsewhere
  */
-@TestVerticleInfo(filenameFilter=".+\\.groovy", funcRegex="def[\\s]+(test[^\\s(]+)", includes="io.vertx~mod-rxjava~1.0.0-beta1-SNAPSHOT")
+@TestVerticleInfo(filenameFilter=".+\\.groovy", funcRegex="def[\\s]+(test[^\\s(]+)", includes="io.vertx~mod-rxjava~1.0.0-beta2-SNAPSHOT")
 @RunWith(ScriptClassRunner.class)
 public class GroovyIntegrationTests {
   @Test

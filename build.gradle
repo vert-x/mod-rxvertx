@@ -51,8 +51,8 @@ dependencies {
   provided "com.foo:foo-lib:1.0.1" - if you DON'T want it to be packaged in the module zip
   */
 
-  compile "com.netflix.rxjava:rxjava-core:$rxjavaCoreVersion"
-  compile("com.netflix.rxjava:rxjava-groovy:$rxjavaGroovyVersion") {
+  compile "com.netflix.rxjava:rxjava-core:$rxjavaVersion"
+  compile("com.netflix.rxjava:rxjava-groovy:$rxjavaVersion") {
     exclude group:"org.codehaus.groovy", module:"groovy-all"
   }
 
