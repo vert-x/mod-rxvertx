@@ -4,15 +4,14 @@ import java.util.*;
 
 import io.vertx.rxcore.RxSupport;
 import io.vertx.rxcore.java.http.*;
-
 import org.junit.Test;
 import org.vertx.java.core.buffer.Buffer;
 import org.vertx.java.core.http.HttpClientRequest;
 import org.vertx.testtools.TestVerticle;
 import rx.Observable;
-import rx.Observer;
-import rx.util.functions.*;
-import static org.vertx.testtools.VertxAssert.*;
+import rx.util.functions.Action1;
+import rx.util.functions.Func1;
+import static io.vertx.rxcore.test.integration.java.RxAssert.*;
 
 /** HttpIntegrationTest
  * @author <a href="http://github.com/petermd">Peter McDonnell</a>
@@ -53,8 +52,7 @@ public class HttpIntegrationTest extends TestVerticle {
                       s.writeTextFrame(b.toString());
                     }
                   }
-                },
-                RxTestSupport.traceError,RxTestSupport.traceComplete);
+                });
             }
         });
 
@@ -80,89 +78,50 @@ public class HttpIntegrationTest extends TestVerticle {
     
     RxHttpClient client=new RxHttpClient(vertx.createHttpClient().setHost("localhost").setPort(8080));
 
-    client
+    Observable<Buffer> ob=client
       .getNow("/ping/get")
-      .mapMany(downloadBody())
-      .subscribe(new Action1<Buffer>() {
-        public void call(Buffer b) {
-          System.out.println("HttpClient:response["+b+"]");
-          assertEquals("response","pong:/ping/get",b.toString());
-          testComplete();
-        }
-      });
+      .mapMany(downloadBody());
+    
+    assertSequenceThenComplete(ob,new Buffer("pong:/ping/get"));
   }
-  
- /*
+
+  /*
   * Verify that if underlying httpclient throws an exception, 
   * the observer is notified. 
   */
+
   @Test
-  public void testHttpClientThrowsException() {	
-	// set the port to an invalid port to cause the underlying client to throw an exception
-	final int invalidPort = 90080;
+  public void testHttpClientThrowsException() {
+    // set the port to an invalid port to cause the underlying client to throw an exception
+    final int invalidPort=90080;
     RxHttpClient client=new RxHttpClient(vertx.createHttpClient().setHost("localhost").setPort(invalidPort));
-    Observable<RxHttpClientResponse> observable = client.request("GET", "/whatever-random", new Action1<HttpClientRequest>() {		
-		@Override
-		public void call(HttpClientRequest request) {
-			request.end();
-		}
-	});
+    Observable<RxHttpClientResponse> ob=client.request("GET", "/whatever-random", new Action1<HttpClientRequest>() {
+      @Override
+      public void call(HttpClientRequest request) {
+        request.end();
+      }
+    });
     
-    observable.subscribe(new Observer<RxHttpClientResponse>() {		
-		@Override
-		public void onNext(RxHttpClientResponse args) {
-			fail("onNext() shouldnt be invoked");			
-		}
-		
-		@Override
-		public void onError(Throwable e) {
-			assertNotNull(e);
-			System.out.println("Exception was thrown and handled as expected, exception message: " + e.getMessage());
-		}
-		
-		@Override
-		public void onCompleted() {
-			fail("onCompleted() shouldnt be invoked");			
-		}
-	});
-    testComplete();
+    assertError(ob,IllegalArgumentException.class);
   }
-  
+
   /*
-   * Verify that if the requestBuilder throws an exception, 
-   * the observer is notified accordingly. 
-   */
-   @Test
-   public void testHttpClientRequestBuilderThrowsException() {	
-     RxHttpClient client = new RxHttpClient(vertx.createHttpClient().setHost("localhost").setPort(8080));
-     Observable<RxHttpClientResponse> observable = client.request("GET", "/whatever-random", new Action1<HttpClientRequest>() {		
- 		@Override
- 		public void call(HttpClientRequest request) {
- 			throw new RuntimeException("Builder Exception");
- 		}
- 	});
-     
-     observable.subscribe(new Observer<RxHttpClientResponse>() {		
- 		@Override
- 		public void onNext(RxHttpClientResponse args) {
- 			fail("onNext() shouldnt be invoked");			
- 		}
- 		
- 		@Override
- 		public void onError(Throwable e) {
- 			assertNotNull(e);
- 			assertEquals(RuntimeException.class, e.getClass());
- 			assertEquals("Builder Exception", e.getMessage());
- 			System.out.println("Exception was thrown and handled as expected, exception message: " + e.getMessage());
- 		}
- 		
- 		@Override
- 		public void onCompleted() {
- 			fail("onCompleted() shouldnt be invoked");			
- 		}
- 	});
-     testComplete();
-   }
+  * Verify that if the requestBuilder throws an exception, 
+  * the observer is notified accordingly. 
+  */
+
+  @Test
+  public void testHttpClientRequestBuilderThrowsException() {
+    RxHttpClient client=new RxHttpClient(vertx.createHttpClient().setHost("localhost").setPort(8080));
+    Observable<RxHttpClientResponse> ob=client.request("GET", "/whatever-random", new Action1<HttpClientRequest>() {
+      @Override
+      public void call(HttpClientRequest request) {
+        throw new RuntimeException("Builder Exception");
+      }
+    });
+    
+    assertError(ob,RuntimeException.class,"Builder Exception");
+  }
 
   @Test
   public void testWebSocket() {
@@ -178,23 +137,8 @@ public class HttpIntegrationTest extends TestVerticle {
       .subscribe(new Action1<RxWebSocket>() {
         public void call(RxWebSocket s) {
           System.out.println("WebSocket:connected");
-          s
-            .writeAsTextFrame(Observable.from(seq))
-            .subscribe(RxTestSupport.traceNext,RxTestSupport.traceError,RxTestSupport.traceComplete);
-          s.asObservable()
-            .subscribe(
-              new Action1<Buffer>() {
-                public void call(Buffer b) {
-                  System.out.println("WebSocket:response["+b+"]");
-                  assertEquals(b.toString(),seq.remove(0));
-                }
-              },
-              RxTestSupport.traceError,
-              new Action0() {
-                public void call() {
-                  testComplete();
-                }
-              });
+          assertSingle(s.writeAsTextFrame(Observable.from(seq)),5l);
+          assertSequenceThenComplete(s.asObservable(),new Buffer("eeny"),new Buffer("meeny"),new Buffer("miny"),new Buffer("moe"));
         }
       });
   }

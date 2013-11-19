@@ -5,12 +5,11 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.vertx.java.core.Handler;
 import rx.*;
 import rx.subscriptions.Subscriptions;
-import rx.util.functions.Action0;
 
-/** Subject that stores the result of a Handler and notfies all current and future Observers 
+/** Handler that stores the result and provides it to a single Observer 
  * @author <a href="http://github.com/petermd">Peter McDonnell</a>
  **/
-public class MemoizeHandler<R,T> implements Handler<T> {
+public class MemoizeHandler<R,T> implements Handler<T>,Subscription {
   
   /** States */
   enum State { ACTIVE, COMPLETED, FAILED };
@@ -55,19 +54,9 @@ public class MemoizeHandler<R,T> implements Handler<T> {
       // State=ACTIVE
       if (!obRef.compareAndSet(null, newObserver))
         throw new IllegalStateException("Cannot have multiple subscriptions");
-      
-      return Subscriptions.create(unsubscribe);
-    }
-  };
 
-  /** Unsubscribe action */
-  public Action0 unsubscribe=new Action0() {
-    public void call() {
-      Observer<? super R> ob=obRef.getAndSet(null);
-      if (ob==null)
-        throw new IllegalStateException("Unsubscribe without subscribe");
-      // Unsubscribe triggers completed
-      ob.onCompleted();
+      // Subscription
+      return MemoizeHandler.this;
     }
   };
 
@@ -81,21 +70,8 @@ public class MemoizeHandler<R,T> implements Handler<T> {
     if (ob==null)
       return;
 
-    try {
-      ob.onNext(value);
-    }
-    catch (Exception e) {
-      e.printStackTrace(); // FIXME: logging
-      ob.onError(e);
-    }
-
-    try {
-      ob.onCompleted();
-    }
-    catch (Exception e) {
-      e.printStackTrace(); // FIXME: logging
-      ob.onError(e);
-    }
+    ob.onNext(value);
+    ob.onCompleted();
   }
   
   /** Dispatch failure */
@@ -108,13 +84,7 @@ public class MemoizeHandler<R,T> implements Handler<T> {
     if (ob==null)
       return;
 
-    try {
-      ob.onError(e);
-    }
-    catch (Exception ee) {
-      // Ignore error in exception handler
-      ee.printStackTrace(); // FIXME: logging
-    }
+    ob.onError(e);
   }
   
   // Handler implementation
@@ -124,5 +94,16 @@ public class MemoizeHandler<R,T> implements Handler<T> {
   public void handle(T value) {
     // Default: Assume same type
     complete((R)value);
+  }
+
+  // Subscription implementation
+  
+  /** Unsubscribe */
+  public void unsubscribe() {
+    Observer<? super R> ob=obRef.getAndSet(null);
+    if (ob==null)
+      throw new IllegalStateException("Unsubscribe without subscribe");
+    // Unsubscribe triggers completed
+    ob.onCompleted();
   }
 }

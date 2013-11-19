@@ -1,17 +1,11 @@
 package io.vertx.rxcore.java.eventbus;
 
-import io.vertx.rxcore.java.impl.VertxObservable;
-import io.vertx.rxcore.java.impl.VertxSubscription;
+import io.vertx.rxcore.java.impl.SubscriptionHandler;
+import org.vertx.java.core.AsyncResult;
 import org.vertx.java.core.Handler;
-import org.vertx.java.core.buffer.Buffer;
 import org.vertx.java.core.eventbus.EventBus;
 import org.vertx.java.core.eventbus.Message;
-import org.vertx.java.core.json.JsonArray;
-import org.vertx.java.core.json.JsonObject;
 import rx.Observable;
-import rx.Observer;
-import rx.Subscription;
-import rx.util.functions.Func1;
 
 /*
  * Copyright 2013 Red Hat, Inc.
@@ -32,126 +26,91 @@ import rx.util.functions.Func1;
  */
 public class RxEventBus {
 
+  // Customer handlers
+  
+  /** Standard SendHandler */
+  protected static class SendHandler<R> extends SubscriptionHandler<RxMessage<R>,Message<R>> {
+    @Override public void handle(Message m) {
+      fireResult(new RxMessage(m));
+    }
+  }
+  
+  /** Async SendHandler */
+  protected static class AsyncSendHandler<R> extends SubscriptionHandler<RxMessage<R>, AsyncResult<Message<R>>> {
+    @Override public void handle(AsyncResult<Message<R>> r) {
+      if (r.succeeded()) {
+        fireResult(new RxMessage(r.result()));
+      }
+      else {
+        fireError(r.cause());
+      }
+    }
+  }
+  
+  /** Receive handler */
+  protected static class ReceiveHandler<R> extends SubscriptionHandler<RxMessage<R>,Message> {
+    @Override public void handle(Message m) {
+      fireNext(new RxMessage(m));
+    }
+  }
+  
+  // Instance variables
+
+  /** Core bus */
   private final EventBus eventBus;
 
+  /** Create new RxEventBus */
   public RxEventBus(EventBus eventBus) {
     this.eventBus = eventBus;
   }
 
-  public <T> Observable<RxMessage<T>> send(String address, String msg) {
-    return doSend(address, msg);
+  /** Send a message */
+  public <S,R> Observable<RxMessage<R>> send(final String address, final S msg) {
+    SendHandler<R> h=new SendHandler<R>();
+    this.eventBus.send(address,msg,(Handler)h);
+    return Observable.create(h); 
+  }
+  
+  /** Send a message with timeout */
+  public <S,R> Observable<RxMessage<R>> sendWithTimeout(final String address, final S msg, final long timeout) {
+    AsyncSendHandler<R> h=new AsyncSendHandler<R>();
+    this.eventBus.sendWithTimeout(address,msg,timeout,h);
+    return Observable.create(h); 
   }
 
-  public <T> Observable<RxMessage<T>> send(String address, JsonObject msg) {
-    return doSend(address, msg);
+  /** Create an Observable that executes send() on subscribe */
+  public <S,R> Observable<RxMessage<R>> observeSend(final String address, final S msg) {
+    return Observable.create(new SendHandler<R>() {
+      @Override public void execute() {
+        eventBus.send(address,msg,(Handler)this);
+      }
+    });
+  }
+  
+  /** Create an Observable that executes sendWithTimeout() on subscribe */
+  public <S,R> Observable<RxMessage<R>> observeSendWithTimeout(final String address, final S msg, final long timeout) {
+    return Observable.create(new AsyncSendHandler<R>() {
+      @Override public void execute() {
+        eventBus.sendWithTimeout(address,msg,timeout,this);
+      }
+    });
   }
 
-  public <T> Observable<RxMessage<T>> send(String address, JsonArray msg) {
-    return doSend(address, msg);
-  }
-
-  public <T> Observable<RxMessage<T>> send(String address, Buffer msg) {
-    return doSend(address, msg);
-  }
-
-  public <T> Observable<RxMessage<T>> send(String address, byte[] msg) {
-    return doSend(address, msg);
-  }
-
-  public <T> Observable<RxMessage<T>> send(String address, Integer msg) {
-    return doSend(address, msg);
-  }
-
-  public <T> Observable<RxMessage<T>> send(String address, Long msg) {
-    return doSend(address, msg);
-  }
-
-  public <T> Observable<RxMessage<T>> send(String address, Float msg) {
-    return doSend(address, msg);
-  }
-
-  public <T> Observable<RxMessage<T>> send(String address, Double msg) {
-    return doSend(address, msg);
-  }
-
-  public <T> Observable<RxMessage<T>> send(String address, Boolean msg) {
-    return doSend(address, msg);
-  }
-
-  public <T> Observable<RxMessage<T>> send(String address, Short msg) {
-    return doSend(address, msg);
-  }
-
-  public <T> Observable<RxMessage<T>> send(String address, Character msg) {
-    return doSend(address, msg);
-  }
-
-  public <T> Observable<RxMessage<T>> send(String address, Byte msg) {
-    return doSend(address, msg);
-  }
-
+  /** Register a handler */
   public <T> Observable<RxMessage<T>> registerLocalHandler(final String address) {
-    return registerHandler(address, true);
+    return Observable.create(new ReceiveHandler<T>() {
+      @Override public void execute() {
+        eventBus.registerLocalHandler(address,this);
+      }
+    });
   }
 
+  /** Register a handler */
   public <T> Observable<RxMessage<T>> registerHandler(final String address) {
-    return registerHandler(address, false);
+    return Observable.create(new ReceiveHandler<T>() {
+      @Override public void execute() {
+        eventBus.registerHandler(address,this);
+      }
+    });
   }
-
-  private <T> Observable<RxMessage<T>> doSend(String address, Object msg) {
-    final VertxSubscription<RxMessage<T>> sub = new VertxSubscription<>();
-
-    Observable<RxMessage<T>> obs = new VertxObservable<>(new Observable.OnSubscribeFunc<RxMessage<T>>() {
-      @Override
-      public Subscription onSubscribe(Observer<? super RxMessage<T>> replyObserver) {
-        sub.setObserver(replyObserver);
-        return sub;
-      }
-    });
-
-    eventBus.send(address, msg, new Handler<Message>() {
-      @Override
-      public void handle(Message reply) {
-        sub.handleResult(new RxMessage<T>(reply));
-        sub.complete();
-      }
-    });
-
-    return obs;
-  }
-
-  private <T> Observable<RxMessage<T>> registerHandler(final String address, boolean local) {
-
-    final VertxSubscription<RxMessage<T>> sub = new VertxSubscription<>();
-
-    Observable<RxMessage<T>> obs = new VertxObservable<>(new Observable.OnSubscribeFunc<RxMessage<T>>() {
-      @Override
-      public Subscription onSubscribe(Observer<? super RxMessage<T>> replyObserver) {
-        sub.setObserver(replyObserver);
-        return sub;
-      }
-    });
-
-    final Handler<Message<T>> handler = new Handler<Message<T>>() {
-      @Override
-      public void handle(Message<T> reply) {
-        sub.handleResult(new RxMessage<T>(reply));
-      }
-    };
-
-    if (local) {
-      eventBus.registerLocalHandler(address, handler);
-    } else {
-      eventBus.registerHandler(address, handler);
-    }
-
-    sub.setOnUnsubscribe(new Runnable() {
-      public void run() {
-        eventBus.unregisterHandler(address, handler);
-      }
-    });
-
-    return obs;
-  }
-
 }

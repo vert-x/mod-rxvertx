@@ -1,16 +1,7 @@
 package io.vertx.rxcore.java.eventbus;
 
-import io.vertx.rxcore.java.impl.VertxObservable;
-import io.vertx.rxcore.java.impl.VertxSubscription;
-import org.vertx.java.core.Handler;
-import org.vertx.java.core.buffer.Buffer;
 import org.vertx.java.core.eventbus.Message;
-import org.vertx.java.core.json.JsonArray;
-import org.vertx.java.core.json.JsonObject;
 import rx.Observable;
-import rx.Observer;
-import rx.Subscription;
-import rx.util.functions.Func1;
 
 /*
  * Copyright 2013 Red Hat, Inc.
@@ -31,8 +22,10 @@ import rx.util.functions.Func1;
  */
 public class RxMessage<T> {
 
+  /** Core Message */
   private final Message<T> coreMessage;
 
+  /** Wrap Message with RxMessage */
   RxMessage(Message<T> coreMessage) {
     this.coreMessage = coreMessage;
   }
@@ -51,79 +44,6 @@ public class RxMessage<T> {
     return coreMessage.replyAddress();
   }
 
-  public <T> Observable<RxMessage<T>> reply(Object message) {
-    final VertxSubscription<RxMessage<T>> sub = new VertxSubscription<>();
-
-    Observable<RxMessage<T>> obs = new VertxObservable<>(new Observable.OnSubscribeFunc<RxMessage<T>>() {
-      @Override
-      public Subscription onSubscribe(Observer<? super RxMessage<T>> replyObserver) {
-        sub.setObserver(replyObserver);
-        return sub;
-      }
-    });
-
-    coreMessage.reply(message, new Handler<Message<T>>() {
-      @Override
-      public void handle(Message<T> reply) {
-        sub.handleResult(new RxMessage<>(reply));
-        sub.complete();
-      }
-    });
-
-    return obs;
-  }
-
-  public <T> Observable<RxMessage<T>> reply() {
-    return reply((String)null);
-  }
-
-  public <T> Observable<RxMessage<T>> reply(JsonObject message) {
-    return reply((Object)message);
-  }
-
-  public <T> Observable<RxMessage<T>> reply(JsonArray message) {
-    return reply((Object)message);
-  }
-
-  public <T> Observable<RxMessage<T>> reply(String message) {
-    return reply((Object)message);
-  }
-
-  public <T> Observable<RxMessage<T>> reply(Buffer message) {
-    return reply((Object)message);
-  }
-
-  public <T> Observable<RxMessage<T>> reply(byte[] message) {
-    return reply((Object)message);
-  }
-
-  public <T> Observable<RxMessage<T>> reply(Integer message) {
-    return reply((Object)message);
-  }
-
-  public <T> Observable<RxMessage<T>> reply(Long message) {
-    return reply((Object)message);
-  }
-
-  public <T> Observable<RxMessage<T>> reply(Short message) {
-    return reply((Object)message);
-  }
-
-  public <T> Observable<RxMessage<T>> reply(Character message) {
-    return reply((Object)message);
-  }
-
-  public <T> Observable<RxMessage<T>> reply(Boolean message) {
-    return reply((Object)message);
-  }
-
-  public <T> Observable<RxMessage<T>> reply(Float message) {
-    return reply((Object)message);
-  }
-
-  public <T> Observable<RxMessage<T>> reply(Double message) {
-    return reply((Object)message);
-  }
 
   /**
    * @return The underlying core message
@@ -132,4 +52,31 @@ public class RxMessage<T> {
     return coreMessage;
   }
 
+  /** Send empty reply */
+  public void reply() {
+    coreMessage.reply();
+  }
+
+  /** Send reply without expecting a response */
+  public <R> void reply(final R msg) {
+    coreMessage.reply(msg);
+  }
+
+  /** Observe a reply */
+  public <R,T> Observable<RxMessage<T>> observeReply(final R msg) {
+    return Observable.create(new RxEventBus.SendHandler<T>() {
+      @Override public void execute() {
+        coreMessage.reply(msg,this);
+      }
+    });
+  }
+
+  /** Observe a reply with timeout */
+  public <R,T> Observable<RxMessage<T>> observerReplyWithTimeout(final R msg, final long timeout) {    
+    return Observable.create(new RxEventBus.AsyncSendHandler<T>() {
+      @Override public void execute() {
+        coreMessage.replyWithTimeout(msg,timeout,this);
+      }
+    });
+  }
 }
