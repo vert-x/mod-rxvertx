@@ -5,6 +5,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import io.vertx.rxcore.java.eventbus.RxMessage;
 import rx.Observable;
+import rx.Subscription;
 import rx.plugins.RxJavaErrorHandler;
 import rx.plugins.RxJavaPlugins;
 import rx.util.functions.Action0;
@@ -70,6 +71,47 @@ public class RxAssert {
         // Do nothing
       }
     }, exp);
+  }
+
+  /** Assert that we receive N values */
+  public static <T> Subscription assertCount(Observable<T> in, final int max) {
+    return assertCountThen(in,new Action0() {
+      @Override public void call() {
+      }
+    },max);
+  }
+
+  /** Assert that we receive N values then complete test */
+  public static <T> Subscription assertCountThenComplete(Observable<T> in, final int max) {
+    return assertCountThen(in,new Action0() {
+      @Override public void call() {
+        testComplete();
+      }
+    },max);
+  }
+
+  /** Assert that we receive N values then complete test */
+  public static <T> Subscription assertCountThen(Observable<T> in, final Action0 thenAction, final int max) {
+    final AtomicInteger count=new AtomicInteger(0);
+    return in.subscribe(
+      new Action1<T>() {
+        public void call(T value) {
+          assertTrue(count.incrementAndGet()<=max);
+          System.out.println("sequence["+count+"]="+value);
+        }
+      },
+      new Action1<Throwable>() {
+        public void call(Throwable t) {
+          fail("Error while counting sequence (t="+t+")");
+        }
+      },
+      new Action0() {
+        public void call() {
+          assertTrue(count.get()==max);
+          System.out.println("sequence-complete");
+          thenAction.call();
+        }
+      });
   }
 
   /** Assert a single value then complete test */

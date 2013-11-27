@@ -59,6 +59,8 @@ public class RxEventBus {
   /** Core bus */
   private final EventBus eventBus;
 
+  // Public
+  
   /** Create new RxEventBus */
   public RxEventBus(EventBus eventBus) {
     this.eventBus = eventBus;
