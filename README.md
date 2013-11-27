@@ -16,16 +16,18 @@ Currently Observable wrappers are provided for
 - HttpClient
 - NetServer
 - NetClient
+- Timer
 
 There are also base Observable adapters that map Handler<T> and AsyncResultHandler<T> to Observable<T> that can be used to call other Handler based APIs.
 
 Support coming soon for
 
 - FileSystem
-- Timer
 - SockJSServer
 
 ## Usage
+
+This is a non-runnable module, which means you add it to your module via the "includes" attribute of mod.json.
 
 All standard API methods of the form 
 
@@ -73,6 +75,21 @@ obs.subscribe(
     }
   }
 );
+
+```
+
+### Timer
+
+The timer functions are provided via the RxVertx wrapper. The timer is set on-subscribe. To cancel a timer that has not first, or a periodic timer, just unsubscribe.
+
+```java
+
+RxVertx rx = new RxVertx(vertx);
+rx.setTimer(100).subscribe(new Action1<Long>() {
+  public void call(Long t) {
+    // Timer fired
+  }
+});
 
 ```
 
