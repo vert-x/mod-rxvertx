@@ -93,6 +93,32 @@ sourceSets {
   }
 }
 
+// Source & Docs artifactrs
+
+task sourceJar(type: Jar) {
+  description = 'Builds a source jar artifact suitable for maven deployment.'
+  classifier = 'sources'
+  from sourceSets.main.java
+}
+
+task javadoc(type: Javadoc, overwrite:true) {
+  source = sourceSets.main.allJava
+  classpath = sourceSets.main.compileClasspath
+}
+
+task javadocJar(type: Jar) {
+  description = 'Builds a javadoc jar artifact suitable for maven deployment.'
+  classifier = 'javadoc'
+  from javadoc.destinationDir
+}
+javadocJar.dependsOn javadoc
+
+build.dependsOn sourceJar, javadocJar
+
+artifacts {
+  archives sourceJar, javadocJar
+}
+
 task copyMod( type:Copy, dependsOn: 'classes', description: 'Assemble the module into the local mods directory' ) {
   into "build/mods/$moduleName"
   from compileJava

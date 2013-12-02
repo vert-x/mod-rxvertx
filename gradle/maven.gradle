@@ -17,6 +17,8 @@
 apply plugin: 'maven'
 apply plugin: 'signing'
 
+// SonaType upload
+
 if (!hasProperty('sonatypeUsername')) {
 	ext.sonatypeUsername = ''
 }
