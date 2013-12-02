@@ -93,6 +93,11 @@ def configurePom(def pom) {
       developer {
         id 'purplefox'
       }
+      developer {
+        id 'petermd'
+        name 'Peter McDonnell'
+        email 'petermd@gmail.com'
+      }
     }
 
     scm {
