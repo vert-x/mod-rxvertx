@@ -26,7 +26,7 @@ public class RxHttpServer {
 
   /** Convenience wrapper */
   public Observable<Void> close() {
-    AsyncResultMemoizeHandler<Void> rh=new AsyncResultMemoizeHandler<Void>();
+    AsyncResultMemoizeHandler<Void,Void> rh=new AsyncResultMemoizeHandler<Void,Void>();
     core.close(rh);
     return Observable.create(rh.subscribe);
   }
@@ -35,33 +35,33 @@ public class RxHttpServer {
   
   public Observable<RxHttpServerRequest> http() {
     return Observable.create(
-      new SingleObserverHandler<RxHttpServerRequest, HttpServerRequest>() {
-          public void register() {
+      new SubscriptionHandler<RxHttpServerRequest, HttpServerRequest>() {
+          @Override public void execute() {
             core.requestHandler(this);
           }
-          public void clear() {
+          @Override public void onUnsubscribed() {
             core.requestHandler(null);
           }
-          public RxHttpServerRequest wrap(HttpServerRequest r) {
+          @Override public RxHttpServerRequest wrap(HttpServerRequest r) {
             return new RxHttpServerRequest(r);
           }
-        }.subscribe      
+        }
     );
   }
 
   public Observable<RxServerWebSocket> websocket() {
     return Observable.create(
-      new SingleObserverHandler<RxServerWebSocket, ServerWebSocket>() {
-          public void register() {
+      new SubscriptionHandler<RxServerWebSocket, ServerWebSocket>() {
+          @Override public void execute() {
             core.websocketHandler(this);
           }
-          public void clear() {
+          @Override public void onUnsubscribed() {
             core.websocketHandler(null);
           }
-          public RxServerWebSocket wrap(ServerWebSocket s) {
+          @Override public RxServerWebSocket wrap(ServerWebSocket s) {
             return new RxServerWebSocket(s);
           }
-        }.subscribe      
+        }
     );
   }
 }

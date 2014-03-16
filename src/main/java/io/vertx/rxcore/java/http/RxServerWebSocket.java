@@ -6,6 +6,8 @@ import org.vertx.java.core.buffer.Buffer;
 import org.vertx.java.core.http.ServerWebSocket;
 import rx.Observable;
 
+import java.net.InetSocketAddress;
+
 /** Rx wrapper ServerWebSocket 
  * @author <a href="http://github.com/petermd">Peter McDonnell</a>
  */
@@ -38,5 +40,12 @@ public class RxServerWebSocket extends RxWebSocket<RxServerWebSocket>  {
   public ServerWebSocket reject() {
     return nested.reject();
   }
-  
+
+  public InetSocketAddress remoteAddress() {
+    return nested.remoteAddress();
+  }
+
+  public InetSocketAddress localAddress() {
+    return nested.localAddress();
+  }
 }

@@ -7,8 +7,8 @@ import org.vertx.java.core.buffer.Buffer;
 import org.vertx.java.core.http.*;
 import org.vertx.java.core.json.JsonObject;
 import rx.Observable;
-import rx.util.functions.Action1;
-import rx.util.functions.Func1;
+import rx.functions.Action1;
+import rx.functions.Func1;
 
 /** Utility methods for RxHttpXXX 
  * @author <a href="http://github.com/petermd">Peter McDonnell</a>

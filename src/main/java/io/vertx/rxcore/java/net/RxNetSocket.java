@@ -1,14 +1,9 @@
 package io.vertx.rxcore.java.net;
 
-import io.vertx.rxcore.java.impl.VertxObservable;
-import io.vertx.rxcore.java.impl.VertxSubscription;
-import org.vertx.java.core.Handler;
+import io.vertx.rxcore.RxSupport;
 import org.vertx.java.core.buffer.Buffer;
 import org.vertx.java.core.net.NetSocket;
 import rx.Observable;
-import rx.Observer;
-import rx.Subscription;
-import rx.util.functions.Func1;
 
 /*
  * Copyright 2013 Red Hat, Inc.
@@ -39,39 +34,14 @@ public class RxNetSocket {
     return netSocket;
   }
 
+  /** Return as Observable<Buffer> */
+  public Observable<Buffer> asObservable() {
+    return RxSupport.toObservable(netSocket);
+  }
+
+  /** @deprecated use {@link #asObservable()} */
+  @Deprecated
   public Observable<Buffer> dataStream() {
-    if (dataStream == null) {
-      final VertxSubscription<Buffer> sub = new VertxSubscription<>();
-
-      dataStream = new VertxObservable<>(new Observable.OnSubscribeFunc<Buffer>() {
-        @Override
-        public Subscription onSubscribe(Observer<? super Buffer> replyObserver) {
-          sub.setObserver(replyObserver);
-          return sub;
-        }
-      });
-
-      netSocket.dataHandler(new Handler<Buffer>() {
-        @Override
-        public void handle(Buffer buff) {
-          sub.handleResult(buff);
-        }
-      });
-      netSocket.endHandler(new Handler<Void>() {
-        @Override
-        public void handle(Void event) {
-          sub.complete();
-        }
-      });
-
-      sub.setOnUnsubscribe(new Runnable() {
-        public void run() {
-          netSocket.dataHandler(null);
-          netSocket.endHandler(null);
-          dataStream = null;
-        }
-      });
-    }
-    return dataStream;
+    return RxSupport.toObservable(netSocket);
   }
 }

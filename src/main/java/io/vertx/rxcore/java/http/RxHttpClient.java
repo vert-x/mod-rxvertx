@@ -6,7 +6,7 @@ import org.vertx.java.core.Handler;
 import org.vertx.java.core.MultiMap;
 import org.vertx.java.core.http.*;
 import rx.Observable;
-import rx.util.functions.Action1;
+import rx.functions.Action1;
 
 /** Rx wrapper for HttpClient 
  * @author <a href="http://github.com/petermd">Peter McDonnell</a>

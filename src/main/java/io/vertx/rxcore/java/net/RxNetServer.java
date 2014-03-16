@@ -1,12 +1,11 @@
 package io.vertx.rxcore.java.net;
 
-import io.vertx.rxcore.java.impl.VertxObservable;
-import io.vertx.rxcore.java.impl.VertxSubscription;
-import org.vertx.java.core.*;
+import io.vertx.rxcore.java.impl.AsyncResultMemoizeHandler;
+import io.vertx.rxcore.java.impl.SubscriptionHandler;
+import org.vertx.java.core.AsyncResult;
 import org.vertx.java.core.net.NetServer;
 import org.vertx.java.core.net.NetSocket;
 import rx.*;
-import rx.util.functions.Func1;
 
 /*
  * Copyright 2013 Red Hat, Inc.
@@ -38,32 +37,25 @@ public class RxNetServer {
   }
 
   public Observable<RxNetSocket> connectStream() {
-    if (connectStream == null) {
-      final VertxSubscription<RxNetSocket> sub = new VertxSubscription<>();
 
-      connectStream = new VertxObservable<>(new Observable.OnSubscribeFunc<RxNetSocket>() {
-        @Override
-        public Subscription onSubscribe(Observer<? super RxNetSocket> replyObserver) {
-          sub.setObserver(replyObserver);
-          return sub;
+    if (connectStream!=null)
+      return connectStream;
+
+    connectStream=Observable.create(
+      new SubscriptionHandler<RxNetSocket, NetSocket>() {
+        @Override public void execute() {
+          netServer.connectHandler(this);
         }
-      });
-
-      netServer.connectHandler(new Handler<NetSocket>() {
-        @Override
-        public void handle(NetSocket sock) {
-          sub.handleResult(new RxNetSocket(sock));
-        }
-      });
-
-      sub.setOnUnsubscribe(new Runnable() {
-        public void run() {
+        @Override public void onUnsubscribed() {
           netServer.connectHandler(null);
-          connectStream = null;
+          connectStream=null;
         }
-      });
+        @Override public RxNetSocket wrap(NetSocket r) {
+          return new RxNetSocket(r);
+        }
+      }
+    );
 
-    }
     return connectStream;
   }
 
@@ -71,55 +63,28 @@ public class RxNetServer {
     return listen(port, "0.0.0.0");
   }
 
-  public Observable<RxNetServer> listen(int port, String host) {
-    final VertxSubscription<RxNetServer> sub = new VertxSubscription<>();
-
-    Observable<RxNetServer> obs = new VertxObservable<>(new Observable.OnSubscribeFunc<RxNetServer>() {
-      @Override
-      public Subscription onSubscribe(Observer<? super RxNetServer> replyObserver) {
-        sub.setObserver(replyObserver);
-        return sub;
-      }
-    });
-
-    netServer.listen(port, host, new AsyncResultHandler<NetServer>() {
-      @Override
-      public void handle(AsyncResult<NetServer> asyncResult) {
-        if (asyncResult.succeeded()) {
-          sub.handleResult(RxNetServer.this);
-        } else {
-          sub.failed(asyncResult.cause());
+  public Observable<RxNetServer> listen(final int port, final String host) {
+    final RxNetServer server=this;
+    return Observable.create(
+      new SubscriptionHandler<RxNetServer, AsyncResult<NetServer>>() {
+        @Override
+        public void execute() {
+          netServer.listen(port,host,this);
         }
-        sub.complete();
+        @Override
+        public void handle(AsyncResult<NetServer> value) {
+          if (value.succeeded())
+            fireResult(server);
+          else
+            fireError(value.cause());
+        }
       }
-    });
-
-    return obs;
+    );
   }
 
   public Observable<Void> close() {
-    final VertxSubscription<Void> sub = new VertxSubscription<>();
-
-    Observable<Void> obs = new VertxObservable<>(new Observable.OnSubscribeFunc<Void>() {
-      @Override
-      public Subscription onSubscribe(Observer<? super Void> replyObserver) {
-        sub.setObserver(replyObserver);
-        return sub;
-      }
-    });
-
-    netServer.close(new AsyncResultHandler<Void>() {
-      @Override
-      public void handle(AsyncResult<Void> asyncResult) {
-        if (asyncResult.succeeded()) {
-          sub.handleResult(null);
-        } else {
-          sub.failed(asyncResult.cause());
-        }
-        sub.complete();
-      }
-    });
-
-    return obs;
+    AsyncResultMemoizeHandler<Void,Void> rh=new AsyncResultMemoizeHandler<Void,Void>();
+    netServer.close(rh);
+    return Observable.create(rh.subscribe);
   }
 }

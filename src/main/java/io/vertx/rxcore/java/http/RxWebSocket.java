@@ -1,5 +1,6 @@
 package io.vertx.rxcore.java.http;
 
+import java.net.InetSocketAddress;
 import java.util.concurrent.atomic.AtomicLong;
 
 import io.vertx.rxcore.RxSupport;
@@ -9,8 +10,8 @@ import org.vertx.java.core.http.WebSocket;
 import org.vertx.java.core.http.WebSocketBase;
 import rx.Observable;
 import rx.subjects.ReplaySubject;
-import rx.util.functions.Action0;
-import rx.util.functions.Action1;
+import rx.functions.Action0;
+import rx.functions.Action1;
 
 /** Rx wrapper for WebSocket 
  * @author <a href="http://github.com/petermd">Peter McDonnell</a>
@@ -84,6 +85,14 @@ public class RxWebSocket<T extends WebSocket> implements WebSocket {
 
   public void close() {
     nested.close();
+  }
+
+  public InetSocketAddress remoteAddress() {
+    return nested.remoteAddress();
+  }
+
+  public InetSocketAddress localAddress() {
+    return nested.localAddress();
   }
 
   public T dataHandler(Handler<Buffer> handler) {

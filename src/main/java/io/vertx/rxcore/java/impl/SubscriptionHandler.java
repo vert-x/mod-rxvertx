@@ -4,94 +4,129 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import org.vertx.java.core.Handler;
 import rx.*;
-import rx.subscriptions.Subscriptions;
 
 /** Handler tied to a single Subscription 
  * @author <a href="http://github.com/petermd">Peter McDonnell</a>
  **/
-public class SubscriptionHandler<R,T> implements Observable.OnSubscribeFunc<R>, Subscription, Handler<T> {
+public class SubscriptionHandler<R,T> implements Observable.OnSubscribe<R>, Handler<T> {
 
   /** Observer reference */
-  protected AtomicReference<Observer<? super R>> obRef=new AtomicReference<Observer<? super R>>();
+  protected AtomicReference<Subscriber<? super R>> subRef =new AtomicReference<Subscriber<? super R>>();
 
   /** Create new SubscriptionHandler */
   public SubscriptionHandler() {
-    this.obRef=new AtomicReference<>();
+    this.subRef =new AtomicReference<>();
   }
   
   /** Execute */
   public void execute() {
   }
 
-  // OnSubscribeFunc
-  
-  public Subscription onSubscribe(Observer<? super R> ob) {
-    if (!this.obRef.compareAndSet(null,ob)) {
+  /** Unsubscribe */
+  public void onUnsubscribed() {
+  }
+
+  // OnSubscribe
+
+  /** Subscription */
+  public void call(Subscriber<? super R> ob) {
+    if (!this.subRef.compareAndSet(null,ob)) {
       throw new IllegalStateException("Cannot have multiple subscriptions");
     }
 
     try {
       execute();
-      return this;
     }
     // If the execution fails then assume then handle() will never be called and 
     // emit an error
     catch(Throwable t) {
       fireError(t);
-      return Subscriptions.empty();
     }
   }
   
   // Handler implementation
-  
+
+  /** Override to wrap value */
+  @SuppressWarnings("unchecked")
+  public R wrap(T value) {
+    return (R)value;
+  }
+
   /** Handle response */
   public void handle(T msg) {
-    // Default operation -> assume R===T and stream
-    fireNext((R)msg);
+    // Assume stream
+    fireNext(wrap(msg));
   }
 
-  // Subscription implementation
-
-  /** Unsubscribe */
-  public void unsubscribe() {
-    // Clear reference to ensure we do not propogate
-    Observer<? super R> o=this.obRef.getAndSet(null);
-    if (o==null)
-       return;
-    
-    o.onCompleted();
-  }
-  
   // Implementation
   
   /** Fire next to active observer */
   protected void fireNext(R next) {
 
-    Observer<? super R> o=this.obRef.get();
-    if (o==null)
+    Subscriber<? super R> s=getSubscriber();
+    if (s==null)
       return;
-    
-    o.onNext(next);
+
+    s.onNext(next);
   }
 
   /** Fire result to active observer */
   protected void fireResult(R res) {
 
-    Observer<? super R> o=this.obRef.getAndSet(null);
-    if (o==null)
+    Subscriber<? super R> s=getSubscriber();
+    if (s==null)
       return;
-    
-    o.onNext(res);
-    o.onCompleted();
+
+    s.onNext(res);
+    s.onCompleted();
+
+    onUnsubscribed();
+    subRef.set(null);
+  }
+
+  /** Fire completed to active observer */
+  protected void fireComplete() {
+    Subscriber<? super R> s=getSubscriber();
+    if (s==null)
+      return;
+
+    s.onCompleted();
+
+    onUnsubscribed();
+    subRef.set(null);
   }
   
   /** Fire error to active observer */
   protected void fireError(Throwable t) {
 
-    Observer<? super R> o=this.obRef.getAndSet(null);
-    if (o==null)
+    Subscriber<? super R> s=getSubscriber();
+    if (s==null)
       return;
     
-    o.onError(t);
+    s.onError(t);
+
+    onUnsubscribed();
+    subRef.set(null);
+  }
+
+  /** Get subscriber */
+  protected Subscriber getSubscriber() {
+    Subscriber<? super R> sub=this.subRef.get();
+    if (sub==null)
+      return null;
+
+    // If subscriber has unsubscribed then process first then
+    // remove reference
+    if (sub.isUnsubscribed()) {
+      // Cleanup handler
+      onUnsubscribed();
+      // Unsunscribe should trigger onCompleted
+      sub.onCompleted();
+      // Clear reference so we are now done
+      this.subRef.set(null);
+      return null;
+    }
+
+    return sub;
   }
 }

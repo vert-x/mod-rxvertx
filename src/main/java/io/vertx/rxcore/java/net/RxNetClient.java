@@ -1,9 +1,6 @@
 package io.vertx.rxcore.java.net;
 
-import io.vertx.rxcore.java.impl.VertxObservable;
-import io.vertx.rxcore.java.impl.VertxSubscription;
-import org.vertx.java.core.AsyncResult;
-import org.vertx.java.core.AsyncResultHandler;
+import io.vertx.rxcore.java.impl.AsyncResultMemoizeHandler;
 import org.vertx.java.core.net.NetClient;
 import org.vertx.java.core.net.NetSocket;
 import rx.Observable;
@@ -46,28 +43,13 @@ public class RxNetClient {
   }
 
   public Observable<RxNetSocket> connect(int port, String host) {
-    final VertxSubscription<RxNetSocket> sub = new VertxSubscription<>();
-
-    Observable<RxNetSocket> connectObservable = new VertxObservable<>(new Observable.OnSubscribeFunc<RxNetSocket>() {
+    AsyncResultMemoizeHandler<RxNetSocket,NetSocket> rh=new AsyncResultMemoizeHandler<RxNetSocket,NetSocket>() {
       @Override
-      public Subscription onSubscribe(Observer<? super RxNetSocket> replyObserver) {
-        sub.setObserver(replyObserver);
-        return sub;
+      public RxNetSocket wrap(NetSocket s) {
+        return new RxNetSocket(s);
       }
-    });
-
-    netClient.connect(port, host, new AsyncResultHandler<NetSocket>() {
-      @Override
-      public void handle(AsyncResult<NetSocket> asyncResult) {
-        if (asyncResult.succeeded()) {
-          sub.handleResult(new RxNetSocket(asyncResult.result()));
-        } else {
-          sub.failed(asyncResult.cause());
-        }
-        sub.complete();
-      }
-    });
-
-    return connectObservable;
+    };
+    netClient.connect(port,host,rh);
+    return Observable.create(rh.subscribe);
   }
 }

@@ -72,6 +72,10 @@ public class RxHttpServerRequest implements HttpServerRequest {
     return nested.remoteAddress();
   }
 
+  public InetSocketAddress localAddress() {
+    return nested.localAddress();
+  }
+
   public X509Certificate[] peerCertificateChain() throws SSLPeerUnverifiedException {
     return nested.peerCertificateChain();
   }

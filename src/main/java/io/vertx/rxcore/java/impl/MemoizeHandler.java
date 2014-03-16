@@ -6,10 +6,10 @@ import org.vertx.java.core.Handler;
 import rx.*;
 import rx.subscriptions.Subscriptions;
 
-/** Handler that stores the result and provides it to a single Observer 
+/** Handler that stores the result and provides it to a single Subscriber
  * @author <a href="http://github.com/petermd">Peter McDonnell</a>
  **/
-public class MemoizeHandler<R,T> implements Handler<T>,Subscription {
+public class MemoizeHandler<R,T> implements Handler<T> {
   
   /** States */
   enum State { ACTIVE, COMPLETED, FAILED };
@@ -23,8 +23,8 @@ public class MemoizeHandler<R,T> implements Handler<T>,Subscription {
   /** Error */
   private Throwable error;
   
-  /** Reference to active observer */
-  private AtomicReference<Observer<? super R>> obRef=new AtomicReference<Observer<? super R>>();
+  /** Reference to active subscriber */
+  private AtomicReference<Subscriber<? super R>> subRef =new AtomicReference<Subscriber<? super R>>();
   
   /** Create new MemoizeHandler */
   public MemoizeHandler() {
@@ -34,29 +34,26 @@ public class MemoizeHandler<R,T> implements Handler<T>,Subscription {
   }
   
   /** Subscription function */
-  public Observable.OnSubscribeFunc<R> subscribe=new Observable.OnSubscribeFunc<R>() {
-    public Subscription onSubscribe(Observer<? super R> newObserver) {
+  public Observable.OnSubscribe<R> subscribe=new Observable.OnSubscribe<R>() {
+    public void call(Subscriber<? super R> newSubscriber) {
       // Check if complete
       switch(state) {
 
         // Completed. Forward the saved result
         case COMPLETED:
-          newObserver.onNext(result);
-          newObserver.onCompleted();
-          return Subscriptions.empty();
+          newSubscriber.onNext(result);
+          newSubscriber.onCompleted();
+          return;
         
         // Failed already. Forward the saved error
         case FAILED:
-          newObserver.onError(error);
-          return Subscriptions.empty();
+          newSubscriber.onError(error);
+          return;
       }
       
       // State=ACTIVE
-      if (!obRef.compareAndSet(null, newObserver))
+      if (!subRef.compareAndSet(null, newSubscriber))
         throw new IllegalStateException("Cannot have multiple subscriptions");
-
-      // Subscription
-      return MemoizeHandler.this;
     }
   };
 
@@ -65,7 +62,7 @@ public class MemoizeHandler<R,T> implements Handler<T>,Subscription {
     this.result=value;
     this.state=State.COMPLETED;
 
-    Observer<? super R> ob=obRef.get();
+    Observer<? super R> ob=getObserver();
     // Ignore if no active observer
     if (ob==null)
       return;
@@ -79,7 +76,7 @@ public class MemoizeHandler<R,T> implements Handler<T>,Subscription {
     this.error=e;
     this.state=State.FAILED;
 
-    Observer<? super R> ob=obRef.get();
+    Observer<? super R> ob=getObserver();
     // Ignore if no active observer
     if (ob==null)
       return;
@@ -92,18 +89,15 @@ public class MemoizeHandler<R,T> implements Handler<T>,Subscription {
   /** Complete */
   @SuppressWarnings("unchecked")
   public void handle(T value) {
-    // Default: Assume same type
     complete((R)value);
   }
 
-  // Subscription implementation
-  
-  /** Unsubscribe */
-  public void unsubscribe() {
-    Observer<? super R> ob=obRef.getAndSet(null);
-    if (ob==null)
-      throw new IllegalStateException("Unsubscribe without subscribe");
-    // Unsubscribe triggers completed
-    ob.onCompleted();
+  // Implementation
+
+  /** Return Observer */
+  protected Observer<? super R> getObserver() {
+    Subscriber<? super R> s=subRef.get();
+
+    return (s!=null) && !s.isUnsubscribed()?s:null;
   }
 }

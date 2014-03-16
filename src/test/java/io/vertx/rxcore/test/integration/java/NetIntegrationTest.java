@@ -24,7 +24,7 @@ import org.junit.Test;
 import org.vertx.java.core.buffer.Buffer;
 import org.vertx.testtools.TestVerticle;
 import rx.Observable;
-import rx.util.functions.Action1;
+import rx.functions.Action1;
 
 import static org.vertx.testtools.VertxAssert.*;
 
@@ -41,7 +41,7 @@ public class NetIntegrationTest extends TestVerticle {
       @Override
       public void call(final RxNetSocket rxNetSocket) {
         System.out.println("Got a connection");
-        rxNetSocket.dataStream().subscribe(new Action1<Buffer>() {
+        rxNetSocket.asObservable().subscribe(new Action1<Buffer>() {
           @Override
           public void call(Buffer buffer) {
             // Just echo back
@@ -55,14 +55,13 @@ public class NetIntegrationTest extends TestVerticle {
       @Override
       public void call(RxNetServer rxNs) {
         assertTrue(rxNetServer == rxNs);
-
         RxNetClient rxNetClient = new RxNetClient(vertx.createNetClient());
         Observable<RxNetSocket> connectObs = rxNetClient.connect(1234);
         connectObs.subscribe(new Action1<RxNetSocket>() {
           @Override
           public void call(RxNetSocket rxNetSocket) {
             rxNetSocket.coreSocket().write("somedata");
-            rxNetSocket.dataStream().subscribe(new Action1<Buffer>() {
+            rxNetSocket.asObservable().subscribe(new Action1<Buffer>() {
               @Override
               public void call(Buffer buffer) {
                 System.out.println("Got data " + buffer);

@@ -3,7 +3,7 @@ package io.vertx.rxcore;
 import java.io.UnsupportedEncodingException;
 import java.util.concurrent.atomic.AtomicLong;
 
-import io.vertx.rxcore.java.impl.SingleObserverHandler;
+import io.vertx.rxcore.java.impl.SubscriptionHandler;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.buffer.Buffer;
 import org.vertx.java.core.eventbus.Message;
@@ -12,7 +12,7 @@ import org.vertx.java.core.streams.ReadStream;
 import org.vertx.java.core.streams.WriteStream;
 import rx.Observable;
 import rx.subjects.PublishSubject;
-import rx.util.functions.*;
+import rx.functions.*;
 
 /** RxSupport */
 public class RxSupport {
@@ -59,23 +59,21 @@ public class RxSupport {
 
   /** Convert ReadStream to Observable */
   public static Observable<Buffer> toObservable(final ReadStream rs) {
-    final SingleObserverHandler<Buffer, Buffer> rh=new SingleObserverHandler<Buffer, Buffer>() {
-      @Override
-      public void register() {
+    final SubscriptionHandler<Buffer, Buffer> rh=new SubscriptionHandler<Buffer, Buffer>() {
+      @Override public void execute() {
         rs.dataHandler(this);
         rs.exceptionHandler(new Handler<Throwable>() {
           public void handle(Throwable t) {
-            fail(t);
+            fireError(t);
           }
         });
         rs.endHandler(new Handler<Void>() {
           public void handle(Void v) {
-            complete();
+            fireComplete();
           }
         });
       }
-      @Override
-      public void clear() {
+      @Override public void onUnsubscribed() {
         try {
           rs.dataHandler(null);
           rs.exceptionHandler(null);
@@ -87,7 +85,7 @@ public class RxSupport {
       }
     };
     
-    return Observable.create(rh.subscribe);
+    return Observable.create(rh);
   }
   
   // JSON 

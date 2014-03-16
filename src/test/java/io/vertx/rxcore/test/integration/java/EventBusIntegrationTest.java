@@ -24,7 +24,7 @@ import io.vertx.rxcore.java.eventbus.RxMessage;
 import org.junit.Test;
 import org.vertx.testtools.TestVerticle;
 import rx.Observable;
-import rx.util.functions.*;
+import rx.functions.*;
 import static io.vertx.rxcore.test.integration.java.RxAssert.assertMessageThenComplete;
 import static org.vertx.testtools.VertxAssert.assertEquals;
 import static org.vertx.testtools.VertxAssert.testComplete;
@@ -100,13 +100,13 @@ public class EventBusIntegrationTest extends TestVerticle {
     });
 
     Observable<RxMessage<String>> obs1 = rxEventBus.send("foo", "ping1");
-    Observable<RxMessage<String>> obs2 = obs1.mapMany(new Func1<RxMessage<String>, Observable<RxMessage<String>>>() {
+    Observable<RxMessage<String>> obs2 = obs1.flatMap(new Func1<RxMessage<String>, Observable<RxMessage<String>>>() {
       @Override
       public Observable<RxMessage<String>> call(RxMessage<String> reply) {
         return rxEventBus.send("foo", reply.body() + "ping2");
       }
     });
-    Observable<RxMessage<String>> obs3 = obs2.mapMany(new Func1<RxMessage<String>, Observable<RxMessage<String>>>() {
+    Observable<RxMessage<String>> obs3 = obs2.flatMap(new Func1<RxMessage<String>, Observable<RxMessage<String>>>() {
       @Override
       public Observable<RxMessage<String>> call(RxMessage<String> reply) {
         return rxEventBus.send("foo", reply.body() + "ping3");
@@ -169,7 +169,7 @@ public class EventBusIntegrationTest extends TestVerticle {
 
     Observable<RxMessage<String>> obs = rxEventBus.registerHandler("foo");
 
-    assertMessageThenComplete(obs.takeFirst(),"hello");
+    assertMessageThenComplete(obs.take(1),"hello");
 
     // Send using core EventBus
     vertx.eventBus().send("foo", "hello");
@@ -181,7 +181,7 @@ public class EventBusIntegrationTest extends TestVerticle {
 
     Observable<RxMessage<String>> obsReply1 = rxEventBus.registerHandler("foo");
 
-    Observable<RxMessage<String>> obsReply2 = obsReply1.mapMany(new Func1<RxMessage<String>, Observable<RxMessage<String>>>() {
+    Observable<RxMessage<String>> obsReply2 = obsReply1.flatMap(new Func1<RxMessage<String>, Observable<RxMessage<String>>>() {
       @Override
       public Observable<RxMessage<String>> call(RxMessage<String> stringRxMessage) {
         // Reply to the message
@@ -190,7 +190,7 @@ public class EventBusIntegrationTest extends TestVerticle {
       }
     });
 
-    Observable<RxMessage<String>> obsReply3 = obsReply2.mapMany(new Func1<RxMessage<String>, Observable<RxMessage<String>>>() {
+    Observable<RxMessage<String>> obsReply3 = obsReply2.flatMap(new Func1<RxMessage<String>, Observable<RxMessage<String>>>() {
       @Override
       public Observable<RxMessage<String>> call(RxMessage<String> stringRxMessage) {
         // Reply to the reply!
@@ -206,7 +206,7 @@ public class EventBusIntegrationTest extends TestVerticle {
 
     Observable<RxMessage<String>> obsSend1 = rxEventBus.send("foo", "hello1");
 
-    Observable<RxMessage<String>> obsSend2 = obsSend1.mapMany(new Func1<RxMessage<String>, Observable<RxMessage<String>>>() {
+    Observable<RxMessage<String>> obsSend2 = obsSend1.flatMap(new Func1<RxMessage<String>, Observable<RxMessage<String>>>() {
       @Override
       public Observable<RxMessage<String>> call(RxMessage<String> stringRxMessage) {
         // The first reply

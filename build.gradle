@@ -1,4 +1,5 @@
 apply from: "gradle/vertx.gradle"
+apply from: "gradle/setup.gradle"
 
 /*
 Usage:

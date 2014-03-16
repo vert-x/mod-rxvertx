@@ -9,8 +9,8 @@ import org.vertx.java.core.buffer.Buffer;
 import org.vertx.java.core.http.HttpClientRequest;
 import org.vertx.testtools.TestVerticle;
 import rx.Observable;
-import rx.util.functions.Action1;
-import rx.util.functions.Func1;
+import rx.functions.Action1;
+import rx.functions.Func1;
 import static io.vertx.rxcore.test.integration.java.RxAssert.*;
 
 /** HttpIntegrationTest

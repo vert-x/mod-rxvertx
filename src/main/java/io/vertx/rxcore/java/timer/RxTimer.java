@@ -18,14 +18,12 @@ public class RxTimer {
     protected AtomicReference<Long> timerRef=new AtomicReference<Long>();
     
     /** Cancel timer on unsubscribe */
-    @Override public void unsubscribe() {
+    @Override public void onUnsubscribed() {
       
       // Cancel the timer if still active
       Long timerId=timerRef.getAndSet(null);
       if (timerId!=null)
         RxTimer.this.core.cancelTimer(timerId);
-      
-      super.unsubscribe();
     }
   }
 
@@ -52,7 +50,6 @@ public class RxTimer {
         timerRef.set(RxTimer.this.core.setTimer(delay,this));
       }
       @Override public void handle(Long res) {
-        timerRef.set(null);
         fireResult(res);
       }
     });
