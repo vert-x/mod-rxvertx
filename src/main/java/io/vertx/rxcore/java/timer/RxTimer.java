@@ -2,7 +2,7 @@ package io.vertx.rxcore.java.timer;
 
 import java.util.concurrent.atomic.AtomicReference;
 
-import io.vertx.rxcore.java.impl.SubscriptionHandler;
+import io.vertx.rxcore.java.impl.SingleSubscriptionHandler;
 import org.vertx.java.core.Vertx;
 import rx.Observable;
 
@@ -12,7 +12,7 @@ public class RxTimer {
   // Definitions
   
   /** Base-class Handler for Timers with cancel on unsubscribe */
-  protected class TimerHandler<R> extends SubscriptionHandler<R,R> {
+  protected class TimerHandler<R> extends SingleSubscriptionHandler<R,R> {
     
     /** Timer Id */    
     protected AtomicReference<Long> timerRef=new AtomicReference<Long>();

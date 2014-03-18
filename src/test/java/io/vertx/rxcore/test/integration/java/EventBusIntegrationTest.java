@@ -1,4 +1,5 @@
 package io.vertx.rxcore.test.integration.java;
+
 /*
  * Copyright 2013 Red Hat, Inc.
  *
@@ -19,13 +20,25 @@ package io.vertx.rxcore.test.integration.java;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
+import io.vertx.rxcore.RxSupport;
 import io.vertx.rxcore.java.eventbus.RxEventBus;
 import io.vertx.rxcore.java.eventbus.RxMessage;
+import io.vertx.rxcore.java.eventbus.RxStream;
 import org.junit.Test;
+import org.vertx.java.core.Handler;
+import org.vertx.java.core.buffer.Buffer;
+import org.vertx.java.core.eventbus.Message;
+import org.vertx.java.core.json.JsonArray;
 import org.vertx.testtools.TestVerticle;
 import rx.Observable;
+import rx.Subscriber;
+import rx.Subscription;
 import rx.functions.*;
+import rx.subscriptions.Subscriptions;
+
+import static io.vertx.rxcore.test.integration.java.RxAssert.assertCountThenComplete;
 import static io.vertx.rxcore.test.integration.java.RxAssert.assertMessageThenComplete;
+import static io.vertx.rxcore.test.integration.java.RxAssert.assertSingle;
 import static org.vertx.testtools.VertxAssert.assertEquals;
 import static org.vertx.testtools.VertxAssert.testComplete;
 
@@ -218,5 +231,121 @@ public class EventBusIntegrationTest extends TestVerticle {
 
     assertMessageThenComplete(obsSend2,"goodday2");
   }
+
+  @Test
+  public void testRetry() {
+
+    final RxEventBus rx=new RxEventBus(vertx.eventBus());
+
+    vertx.eventBus().registerHandler("every3", new Handler<Message<Integer>>() {
+
+      private int times=0;
+
+      public void handle(Message<Integer> msg) {
+        if (times++%3!=2) {
+          System.out.println("no!");
+          msg.fail(500,"no");
+          return;
+        }
+        System.out.println("yes!");
+        msg.reply("yes");
+      }
+    });
+
+    // Keep asking
+    Observable<String> res=rx.<String,String>observeSend("every3", "please")
+      .map(new Func1<RxMessage<String>, String>() {
+        public String call(RxMessage<String> msg) {
+          return msg.body();
+        }
+      })
+      .retry(3);
+
+    assertCountThenComplete(res, 1);
+  }
+
+  @Test
+  public void testStream() {
+
+    final RxEventBus rx=new RxEventBus(vertx.eventBus());
+
+    vertx.eventBus().registerHandler("countdown", new Handler<Message<Integer>>() {
+
+      public void sendBatch(final Message<Integer> msg, int from, int length) {
+        JsonArray res = new JsonArray();
+        for (int i = from; i < from+length; i++) {
+          res.add(i);
+        }
+        // As long as above 0 wait for another request
+        if (from > 0) {
+          msg.reply(res, this);
+        } else {
+          msg.reply(res);
+        }
+      }
+
+      public void handle(Message<Integer> msg) {
+        System.out.println("REQUEST:" + msg.body());
+        sendBatch(msg, msg.body(), 10);
+      }
+    });
+
+    Observable<Buffer> res=rx.<Integer,JsonArray>observeStream("countdown", 400)
+      .map(new Func1<RxStream<Integer, JsonArray>, JsonArray>() {
+        public JsonArray call(RxStream<Integer, JsonArray> s) {
+          int start = s.value().get(0);
+          if (start > 0) {
+            s.next(start - 10);
+          }
+          return s.value();
+        }
+      })
+      .map(new Func1<JsonArray, Buffer>() {
+        public Buffer call(JsonArray data) {
+          return new Buffer(data.encode());
+        }
+      });
+
+    assertCountThenComplete(res,41);
+  }
+  /*
+  @Test
+  public void testFlow() {
+
+    .lift(new Observable.Operator<JsonArray, RxStream<Integer, JsonArray>>() {
+
+      Gate g = new Gate();
+
+      public Subscriber<? super RxStream<Integer, JsonArray>> call(final Subscriber<? super JsonArray> sub) {
+        return new Subscriber<RxStream<Integer, JsonArray>>() {
+          public void onCompleted() {
+            sub.onCompleted();
+          }
+
+          public void onError(Throwable e) {
+            sub.onError(e);
+          }
+
+          public void onNext(final RxStream<Integer, JsonArray> streamElement) {
+            g.add(new Handler<Void>() {
+              public void handle(Void event) {
+                sub.onNext(streamElement.value());
+              }
+            });
+          }
+        };
+      }
+
+    })    // Create a WriteStream that can only handle 5 writes per second
+    RatedWriteStream out=new RatedWriteStream(vertx,5);
+
+    // Ensure we write all 41 buffers
+    assertSingle(RxSupport.stream(res, out).takeLast(1), 41L);
+}
+
+  class Gate {
+    void add(Handler h) {}
+  }
+*/
 
 }

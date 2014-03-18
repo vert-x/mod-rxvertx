@@ -30,6 +30,11 @@ public class RxMessage<T> {
     this.coreMessage = coreMessage;
   }
 
+  /** Return string representation */
+  public String toString() {
+    return "RxMessage["+body()+"]";
+  }
+
   /**
    * The body of the message
    */

@@ -1,7 +1,7 @@
 package io.vertx.rxcore.java.net;
 
 import io.vertx.rxcore.java.impl.AsyncResultMemoizeHandler;
-import io.vertx.rxcore.java.impl.SubscriptionHandler;
+import io.vertx.rxcore.java.impl.SingleSubscriptionHandler;
 import org.vertx.java.core.AsyncResult;
 import org.vertx.java.core.net.NetServer;
 import org.vertx.java.core.net.NetSocket;
@@ -42,7 +42,7 @@ public class RxNetServer {
       return connectStream;
 
     connectStream=Observable.create(
-      new SubscriptionHandler<RxNetSocket, NetSocket>() {
+      new SingleSubscriptionHandler<RxNetSocket, NetSocket>() {
         @Override public void execute() {
           netServer.connectHandler(this);
         }
@@ -66,7 +66,7 @@ public class RxNetServer {
   public Observable<RxNetServer> listen(final int port, final String host) {
     final RxNetServer server=this;
     return Observable.create(
-      new SubscriptionHandler<RxNetServer, AsyncResult<NetServer>>() {
+      new SingleSubscriptionHandler<RxNetServer, AsyncResult<NetServer>>() {
         @Override
         public void execute() {
           netServer.listen(port,host,this);

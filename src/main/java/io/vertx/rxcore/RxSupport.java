@@ -3,7 +3,7 @@ package io.vertx.rxcore;
 import java.io.UnsupportedEncodingException;
 import java.util.concurrent.atomic.AtomicLong;
 
-import io.vertx.rxcore.java.impl.SubscriptionHandler;
+import io.vertx.rxcore.java.impl.SingleSubscriptionHandler;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.buffer.Buffer;
 import org.vertx.java.core.eventbus.Message;
@@ -35,11 +35,21 @@ public class RxSupport {
   public static Observable<Long> stream(Observable<Buffer> src, final WriteStream out) {
     final PublishSubject<Long> rx=PublishSubject.create();
     final AtomicLong total=new AtomicLong();
+
+    // Trap write errors
+    out.exceptionHandler(new Handler<Throwable>() {
+      public void handle(Throwable t) {
+        rx.onError(t);
+      }
+    });
+
     src.subscribe(
       new Action1<Buffer>() {
         public void call(Buffer buffer) {
           out.write(buffer);
           total.addAndGet(buffer.length());
+          // Output the total each buffer
+          rx.onNext(total.get());
         }
       },
       new Action1<Throwable>() {
@@ -49,7 +59,6 @@ public class RxSupport {
       },
       new Action0() {
         public void call() {
-          rx.onNext(total.get());
           rx.onCompleted();
         }
       }
@@ -59,7 +68,7 @@ public class RxSupport {
 
   /** Convert ReadStream to Observable */
   public static Observable<Buffer> toObservable(final ReadStream rs) {
-    final SubscriptionHandler<Buffer, Buffer> rh=new SubscriptionHandler<Buffer, Buffer>() {
+    final SingleSubscriptionHandler<Buffer, Buffer> rh=new SingleSubscriptionHandler<Buffer, Buffer>() {
       @Override public void execute() {
         rs.dataHandler(this);
         rs.exceptionHandler(new Handler<Throwable>() {

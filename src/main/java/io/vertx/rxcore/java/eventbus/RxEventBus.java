@@ -1,11 +1,13 @@
 package io.vertx.rxcore.java.eventbus;
 
-import io.vertx.rxcore.java.impl.SubscriptionHandler;
+import io.vertx.rxcore.java.impl.HandlerSubscription;
+import io.vertx.rxcore.java.impl.SingleSubscriptionHandler;
 import org.vertx.java.core.AsyncResult;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.eventbus.EventBus;
 import org.vertx.java.core.eventbus.Message;
 import rx.Observable;
+import rx.Subscriber;
 
 /*
  * Copyright 2013 Red Hat, Inc.
@@ -26,17 +28,20 @@ import rx.Observable;
  */
 public class RxEventBus {
 
+  /** Default timeout used for all observe* operations */
+  public final static int DEFAULT_TIMEOUT=60*1000;
+
   // Customer handlers
   
   /** Standard SendHandler */
-  protected static class SendHandler<R> extends SubscriptionHandler<RxMessage<R>,Message<R>> {
+  protected static class SendHandler<R> extends SingleSubscriptionHandler<RxMessage<R>,Message<R>> {
     @Override public void handle(Message m) {
       fireResult(new RxMessage(m));
     }
   }
   
   /** Async SendHandler */
-  protected static class AsyncSendHandler<R> extends SubscriptionHandler<RxMessage<R>, AsyncResult<Message<R>>> {
+  protected static class AsyncSendHandler<R> extends SingleSubscriptionHandler<RxMessage<R>, AsyncResult<Message<R>>> {
     @Override public void handle(AsyncResult<Message<R>> r) {
       if (r.succeeded()) {
         fireResult(new RxMessage(r.result()));
@@ -46,9 +51,28 @@ public class RxEventBus {
       }
     }
   }
-  
+
+  /** Async HandlerSubscription */
+  protected static class AsyncSendSubscription<R> extends HandlerSubscription<AsyncResult<Message<R>>,RxMessage<R>> {
+
+    /** Create new AsyncSendSubscription */
+    public AsyncSendSubscription(Subscriber<RxMessage<R>> s) {
+      super(s);
+    }
+
+    /** Handle event */
+    public void handle(AsyncResult<Message<R>> evt) {
+      if (evt.succeeded()) {
+        fireComplete(new RxMessage(evt.result()));
+      }
+      else {
+        fireError(evt.cause());
+      }
+    }
+  }
+
   /** Receive handler */
-  protected static class ReceiveHandler<R> extends SubscriptionHandler<RxMessage<R>,Message> {
+  protected static class ReceiveHandler<R> extends SingleSubscriptionHandler<RxMessage<R>,Message> {
     @Override public void handle(Message m) {
       fireNext(new RxMessage(m));
     }
@@ -59,11 +83,20 @@ public class RxEventBus {
   /** Core bus */
   private final EventBus eventBus;
 
+  /** Default timeout */
+  private final int defaultTimeout;
+
   // Public
-  
+
   /** Create new RxEventBus */
   public RxEventBus(EventBus eventBus) {
+    this(eventBus,DEFAULT_TIMEOUT);
+  }
+
+  /** Create new RxEventBus */
+  public RxEventBus(EventBus eventBus, int defaultTimeout) {
     this.eventBus = eventBus;
+    this.defaultTimeout=defaultTimeout;
   }
 
   /** Send a message */
@@ -80,20 +113,26 @@ public class RxEventBus {
     return Observable.create(h); 
   }
 
-  /** Create an Observable that executes send() on subscribe */
+  /** Create an Observable that executes send() on subscribe. Each new subscribe() will re-send the message */
   public <S,R> Observable<RxMessage<R>> observeSend(final String address, final S msg) {
-    return Observable.create(new SendHandler<R>() {
-      @Override public void execute() {
-        eventBus.send(address,msg,(Handler)this);
+    return Observable.create(new Observable.OnSubscribe<RxMessage<R>>() {
+      /** Send message for each subscription */
+      public void call(Subscriber<? super RxMessage<R>> subscriber) {
+        AsyncSendSubscription hs=new AsyncSendSubscription(subscriber);
+        eventBus.sendWithTimeout(address, (Object)msg, defaultTimeout, (Handler)hs);
+        subscriber.add(hs);
       }
     });
   }
   
   /** Create an Observable that executes sendWithTimeout() on subscribe */
   public <S,R> Observable<RxMessage<R>> observeSendWithTimeout(final String address, final S msg, final long timeout) {
-    return Observable.create(new AsyncSendHandler<R>() {
-      @Override public void execute() {
-        eventBus.sendWithTimeout(address,msg,timeout,this);
+    return Observable.create(new Observable.OnSubscribe<RxMessage<R>>() {
+      /** Send message for each subscription */
+      public void call(Subscriber<? super RxMessage<R>> subscriber) {
+        AsyncSendSubscription hs=new AsyncSendSubscription(subscriber);
+        eventBus.sendWithTimeout(address, (Object)msg, timeout, (Handler)hs);
+        subscriber.add(hs);
       }
     });
   }
@@ -112,6 +151,28 @@ public class RxEventBus {
     return Observable.create(new ReceiveHandler<T>() {
       @Override public void execute() {
         eventBus.registerHandler(address,this);
+      }
+    });
+  }
+
+  /** Create an Observable that requests multiple messages in a sequence */
+  public <S,R> Observable<RxStream<S,R>> observeStream(final String address, final S msg) {
+
+    final RxStream<S,R> s=new RxStream<S,R>();
+
+    return Observable.create(new SingleSubscriptionHandler<RxStream<S,R>,Message<R>>() {
+      @Override public void execute() {
+        s.callback=this;
+        eventBus.send(address,msg,(Handler)this);
+      }
+      @Override public void handle(Message<R> msg) {
+        // Change the current message and re-fire
+        s.handle(msg);
+        fireNext(s);
+        // Check if there is any more to get
+        if (msg.replyAddress()==null) {
+          fireComplete();
+        }
       }
     });
   }

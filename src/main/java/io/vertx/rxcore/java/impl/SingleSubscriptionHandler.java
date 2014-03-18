@@ -8,14 +8,46 @@ import rx.*;
 /** Handler tied to a single Subscription 
  * @author <a href="http://github.com/petermd">Peter McDonnell</a>
  **/
-public class SubscriptionHandler<R,T> implements Observable.OnSubscribe<R>, Handler<T> {
+public class SingleSubscriptionHandler<R,T> implements Observable.OnSubscribe<R>, Handler<T> {
+
+  class SingleSubscription implements Subscription {
+
+    /** Subscriber */
+    public final Subscriber<? super R> subscriber;
+
+    /** Create new SingleSubscription */
+    public SingleSubscription(Subscriber<? super R> subscriber) {
+      this.subscriber=subscriber;
+    }
+
+    /** Handle */
+    public void unsubscribe() {
+
+      if (isUnsubscribed())
+        return;
+
+      // Only trigger onUnsubscribed if we were the active subscription
+      if (subRef.compareAndSet(this,null)) {
+        // Trigger completed
+        this.subscriber.onCompleted();
+        // Handle unsubscribe
+        onUnsubscribed();
+      }
+    }
+
+    /** Check unsubscribed */
+    public boolean isUnsubscribed() {
+      // Check if still the active subscription
+      return subRef.get()!=this;
+    }
+  }
 
   /** Observer reference */
-  protected AtomicReference<Subscriber<? super R>> subRef =new AtomicReference<Subscriber<? super R>>();
+  protected AtomicReference<SingleSubscription> subRef =new AtomicReference<>();
 
-  /** Create new SubscriptionHandler */
-  public SubscriptionHandler() {
-    this.subRef =new AtomicReference<>();
+  /** Create new SingleSubscriptionHandler */
+  public SingleSubscriptionHandler() {
+    this.subRef=new AtomicReference<>();
   }
   
   /** Execute */
@@ -29,10 +61,15 @@ public class SubscriptionHandler<R,T> implements Observable.OnSubscribe<R>, Hand
   // OnSubscribe
 
   /** Subscription */
-  public void call(Subscriber<? super R> ob) {
-    if (!this.subRef.compareAndSet(null,ob)) {
+  public void call(Subscriber<? super R> sub) {
+
+    SingleSubscription singleSub=new SingleSubscription(sub);
+
+    if (!this.subRef.compareAndSet(null, singleSub)) {
       throw new IllegalStateException("Cannot have multiple subscriptions");
     }
+
+    sub.add(singleSub);
 
     try {
       execute();
@@ -78,10 +115,10 @@ public class SubscriptionHandler<R,T> implements Observable.OnSubscribe<R>, Hand
       return;
 
     s.onNext(res);
-    s.onCompleted();
 
-    onUnsubscribed();
-    subRef.set(null);
+    this.subRef.set(null);
+
+    s.onCompleted();
   }
 
   /** Fire completed to active observer */
@@ -90,10 +127,9 @@ public class SubscriptionHandler<R,T> implements Observable.OnSubscribe<R>, Hand
     if (s==null)
       return;
 
-    s.onCompleted();
+    this.subRef.set(null);
 
-    onUnsubscribed();
-    subRef.set(null);
+    s.onCompleted();
   }
   
   /** Fire error to active observer */
@@ -102,31 +138,17 @@ public class SubscriptionHandler<R,T> implements Observable.OnSubscribe<R>, Hand
     Subscriber<? super R> s=getSubscriber();
     if (s==null)
       return;
-    
-    s.onError(t);
 
-    onUnsubscribed();
-    subRef.set(null);
+    this.subRef.set(null);
+
+    s.onError(t);
   }
 
   /** Get subscriber */
   protected Subscriber getSubscriber() {
-    Subscriber<? super R> sub=this.subRef.get();
-    if (sub==null)
-      return null;
 
-    // If subscriber has unsubscribed then process first then
-    // remove reference
-    if (sub.isUnsubscribed()) {
-      // Cleanup handler
-      onUnsubscribed();
-      // Unsunscribe should trigger onCompleted
-      sub.onCompleted();
-      // Clear reference so we are now done
-      this.subRef.set(null);
-      return null;
-    }
+    SingleSubscription singleSub=this.subRef.get();
 
-    return sub;
+    return (singleSub!=null)?singleSub.subscriber:null;
   }
 }

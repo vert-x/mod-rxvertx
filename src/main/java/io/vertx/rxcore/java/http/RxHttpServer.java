@@ -35,7 +35,7 @@ public class RxHttpServer {
   
   public Observable<RxHttpServerRequest> http() {
     return Observable.create(
-      new SubscriptionHandler<RxHttpServerRequest, HttpServerRequest>() {
+      new SingleSubscriptionHandler<RxHttpServerRequest, HttpServerRequest>() {
           @Override public void execute() {
             core.requestHandler(this);
           }
@@ -51,7 +51,7 @@ public class RxHttpServer {
 
   public Observable<RxServerWebSocket> websocket() {
     return Observable.create(
-      new SubscriptionHandler<RxServerWebSocket, ServerWebSocket>() {
+      new SingleSubscriptionHandler<RxServerWebSocket, ServerWebSocket>() {
           @Override public void execute() {
             core.websocketHandler(this);
           }
