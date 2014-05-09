@@ -24,6 +24,7 @@ import io.vertx.rxcore.RxSupport;
 import io.vertx.rxcore.java.eventbus.RxEventBus;
 import io.vertx.rxcore.java.eventbus.RxMessage;
 import io.vertx.rxcore.java.eventbus.RxStream;
+import io.vertx.rxcore.java.impl.Regulator;
 import org.junit.Test;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.buffer.Buffer;
@@ -62,7 +63,6 @@ public class EventBusIntegrationTest extends TestVerticle {
       }
     });
   }
-
 
   @Test
   // Send some messages in series - i.e. wait for result of previous one before sending next one
@@ -308,44 +308,58 @@ public class EventBusIntegrationTest extends TestVerticle {
 
     assertCountThenComplete(res,41);
   }
-  /*
+
   @Test
   public void testFlow() {
 
-    .lift(new Observable.Operator<JsonArray, RxStream<Integer, JsonArray>>() {
+    final RxEventBus rx=new RxEventBus(vertx.eventBus());
 
-      Gate g = new Gate();
+    vertx.eventBus().registerHandler("countdown", new Handler<Message<Integer>>() {
 
-      public Subscriber<? super RxStream<Integer, JsonArray>> call(final Subscriber<? super JsonArray> sub) {
-        return new Subscriber<RxStream<Integer, JsonArray>>() {
-          public void onCompleted() {
-            sub.onCompleted();
-          }
-
-          public void onError(Throwable e) {
-            sub.onError(e);
-          }
-
-          public void onNext(final RxStream<Integer, JsonArray> streamElement) {
-            g.add(new Handler<Void>() {
-              public void handle(Void event) {
-                sub.onNext(streamElement.value());
-              }
-            });
-          }
-        };
+      public void sendBatch(final Message<Integer> msg, int from, int length) {
+        JsonArray res = new JsonArray();
+        for (int i = from; i < from+length; i++) {
+          res.add(i);
+        }
+        // As long as above 0 wait for another request
+        if (from > 0) {
+          msg.reply(res, this);
+        } else {
+          msg.reply(res);
+        }
       }
 
-    })    // Create a WriteStream that can only handle 5 writes per second
+      public void handle(Message<Integer> msg) {
+        System.out.println("REQUEST:" + msg.body());
+        sendBatch(msg, msg.body(), 10);
+      }
+    });
+
+    Regulator regulator=new Regulator<>();
+
+    Observable<RxStream<Integer,JsonArray>> res=rx.<Integer,JsonArray>observeStream("countdown", 4000)
+      // Add the regulator gate here
+      .lift(regulator)
+      // Process the stream
+      .map(new Func1<RxStream<Integer, JsonArray>, JsonArray>() {
+        public JsonArray call(RxStream<Integer, JsonArray> s) {
+          int start = s.value().get(0);
+          if (start > 0) {
+            s.next(start - 10);
+          }
+          return s.value();
+        }
+      })
+      .map(new Func1<JsonArray, Buffer>() {
+        public Buffer call(JsonArray data) {
+          return new Buffer(data.encode());
+        }
+      });
+
+    // Create a WriteStream that can only handle 5 writes per second
     RatedWriteStream out=new RatedWriteStream(vertx,5);
 
-    // Ensure we write all 41 buffers
-    assertSingle(RxSupport.stream(res, out).takeLast(1), 41L);
-}
-
-  class Gate {
-    void add(Handler h) {}
+    assertCountThenComplete(regulator.stream(res,out),401);
   }
-*/
 
 }
