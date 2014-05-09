@@ -78,6 +78,29 @@ obs.subscribe(
 
 ```
 
+### Scheduler
+
+The standard RxJava schedulers are not compatible with VertX. In order to preserve the [Vert.x Threading Model](http://vertx.io/manual.html#concurrency
+) all callbacks to a Verticle must be made in the context of that Verticle instance.
+
+RxVertx provides a custom Scheduler implementation that uses the Verticle context to scheduler timers and ensure callbacks run on the correct context.
+
+In the following example the scheduler is used to run a Timer and then buffer the output. 
+
+_Note: The RxVertx scheduler must always be used to observe results inside the Verticle. It is possible to use the other Schedulers (eg for blocking calls) as long as you always use ```observeOn``` to route the callbacks onto the Verticle EventLoop. For timers it is more efficient to just use the Vert.x scheduler_
+
+```java
+
+RxVertx rx = new RxVertx(vertx);
+Observable o = (some observable source)
+
+Observable
+      .timer(10, 10, TimeUnit.MILLISECONDS, rx.contextScheduler())
+      .buffer(100,TimeUnit.MILLISECONDS,rx.contextScheduler())
+      .take(10)
+      .subscribe(...)
+```
+
 ### Timer
 
 The timer functions are provided via the RxVertx wrapper. The timer is set on-subscribe. To cancel a timer that has not first, or a periodic timer, just unsubscribe.
@@ -90,8 +113,9 @@ rx.setTimer(100).subscribe(new Action1<Long>() {
     // Timer fired
   }
 });
-
 ```
+
+_The new Scheduler means you can use the native RxJava Timer methods - this Timer may be deprecated in future_
 
 ### Helper ###
 The support class `RxSupport` provides several helper methods for some standard tasks
