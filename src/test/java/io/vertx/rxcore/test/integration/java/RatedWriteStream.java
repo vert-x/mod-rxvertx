@@ -89,7 +89,7 @@ public class RatedWriteStream implements WriteStream<RatedWriteStream> {
     }
     // If limit reached, automatically set a timer
     else if (this.counter.count==this.wps) {
-      this.vertx.setTimer(this.counter.remaining(),this.drainHandler);
+      this.vertx.setTimer(this.counter.remaining(),new Handler<Long>() { public void handle(Long value) { drainHandler.handle(null); } });
     }
     return this;
   }
