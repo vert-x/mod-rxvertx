@@ -3,6 +3,7 @@ package io.vertx.rxcore.java;
 import io.vertx.rxcore.java.eventbus.RxEventBus;
 import io.vertx.rxcore.java.http.RxHttpClient;
 import io.vertx.rxcore.java.http.RxHttpServer;
+import io.vertx.rxcore.java.impl.ContextScheduler;
 import io.vertx.rxcore.java.net.RxNetClient;
 import io.vertx.rxcore.java.net.RxNetServer;
 import io.vertx.rxcore.java.timer.RxTimer;
@@ -20,6 +21,9 @@ public class RxVertx {
   
   /** Timer */
   private RxTimer timer;
+
+  /** Scheduler */
+  private ContextScheduler ctxScheduler;
   
   /** Create RxVertx from Core */
   public RxVertx(Vertx vertx) {
@@ -32,7 +36,17 @@ public class RxVertx {
   public Vertx coreVertx() {
     return this.core;
   }
-  
+
+  // Schedulers
+
+  /** Return context scheduler */
+  public ContextScheduler contextScheduler() {
+    if (this.ctxScheduler==null) {
+      this.ctxScheduler=new ContextScheduler(core);
+    }
+    return this.ctxScheduler;
+  }
+
   // Services 
   
   /** Create NetServer */
