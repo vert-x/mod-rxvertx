@@ -285,7 +285,6 @@ public class EventBusIntegrationTest extends TestVerticle {
       }
 
       public void handle(Message<Integer> msg) {
-        System.out.println("REQUEST:" + msg.body());
         sendBatch(msg, msg.body(), 10);
       }
     });
@@ -330,7 +329,6 @@ public class EventBusIntegrationTest extends TestVerticle {
       }
 
       public void handle(Message<Integer> msg) {
-        System.out.println("REQUEST:" + msg.body());
         sendBatch(msg, msg.body(), 10);
       }
     });

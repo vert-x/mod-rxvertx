@@ -97,7 +97,6 @@ public class RxAssert {
       new Action1<T>() {
         public void call(T value) {
           assertTrue(count.incrementAndGet()<=max);
-          System.out.println("sequence["+count+"]="+value);
         }
       },
       new Action1<Throwable>() {
@@ -135,7 +134,6 @@ public class RxAssert {
       new Action1<T>() {
         public void call(T value) {
           assertEquals(expList.remove(0),value);
-          System.out.println("sequence-next:"+value);
         }
       },
       new Action1<Throwable>() {

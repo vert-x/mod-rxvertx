@@ -6,8 +6,12 @@ import org.vertx.java.core.Handler;
 import org.vertx.testtools.TestVerticle;
 import rx.Observable;
 import rx.Subscription;
+import rx.functions.Action0;
+
 import static io.vertx.rxcore.test.integration.java.RxAssert.assertCount;
+import static io.vertx.rxcore.test.integration.java.RxAssert.assertCountThen;
 import static io.vertx.rxcore.test.integration.java.RxAssert.assertCountThenComplete;
+import static org.vertx.testtools.VertxAssert.assertTrue;
 import static org.vertx.testtools.VertxAssert.testComplete;
 
 /**
@@ -61,16 +65,19 @@ public class TimerIntegrationTest extends TestVerticle {
   public void testSetPeriodic() {
     RxTimer timer=new RxTimer(vertx);
     
-    Observable<Long> ob=timer.setPeriodic(50);
-    
+    Observable<Long> ob=timer.setPeriodic(50).take(3);
+
+    final long startTime=System.currentTimeMillis();
+
     // Expect 3 values
-    final Subscription sub=assertCountThenComplete(ob,3);
-    
-    vertx.setTimer(50*3+25,new Handler<Long>() {
-      public void handle(Long event) {
-        System.out.println("Trigger unsubscribe after 3 events");
-        sub.unsubscribe();
+    final Subscription sub=assertCountThen(ob,new Action0() {
+      public void call() {
+        long totalTime=System.currentTimeMillis()-startTime;
+        System.out.println("Test complete after "+(totalTime)+"ms");
+        // Ensure the total time is withing 20% of the expected value
+        assertTrue("Time within 20% of expected",Math.abs((totalTime/(50*3))-1)<0.2);
+        testComplete();
       }
-    });
+    }, 3);
   }
 }
