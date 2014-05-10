@@ -4,9 +4,6 @@ import io.vertx.rxcore.java.impl.AsyncResultMemoizeHandler;
 import org.vertx.java.core.net.NetClient;
 import org.vertx.java.core.net.NetSocket;
 import rx.Observable;
-import rx.Observer;
-import rx.Subscription;
-import rx.util.functions.Func1;
 
 
 /*
