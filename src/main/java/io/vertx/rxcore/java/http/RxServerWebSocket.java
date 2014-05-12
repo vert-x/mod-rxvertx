@@ -33,6 +33,10 @@ public class RxServerWebSocket extends RxWebSocket<RxServerWebSocket>  {
     return nested.path();
   }
 
+  public String query() {
+    return nested.query();
+  }
+
   public MultiMap headers() {
     return nested.headers();
   }
