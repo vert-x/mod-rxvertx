@@ -4,10 +4,13 @@ import java.net.InetSocketAddress;
 import java.util.concurrent.atomic.AtomicLong;
 
 import io.vertx.rxcore.RxSupport;
+
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.buffer.Buffer;
 import org.vertx.java.core.http.WebSocket;
 import org.vertx.java.core.http.WebSocketBase;
+import org.vertx.java.core.http.WebSocketFrame;
+
 import rx.Observable;
 import rx.subjects.ReplaySubject;
 import rx.functions.Action0;
@@ -80,6 +83,11 @@ public class RxWebSocket<T extends WebSocket> implements WebSocket {
 
   public T closeHandler(Handler<Void> handler) {
     nested.closeHandler(handler);
+    return (T)this;
+  }
+
+  public WebSocket frameHandler(Handler<WebSocketFrame> handler) {
+    nested.frameHandler(handler);
     return (T)this;
   }
 

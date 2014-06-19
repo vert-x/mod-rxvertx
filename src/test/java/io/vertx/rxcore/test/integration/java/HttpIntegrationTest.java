@@ -80,7 +80,7 @@ public class HttpIntegrationTest extends TestVerticle {
 
     Observable<Buffer> ob=client
       .getNow("/ping/get")
-      .mapMany(downloadBody());
+      .flatMap(downloadBody());
     
     assertSequenceThenComplete(ob,new Buffer("pong:/ping/get"));
   }

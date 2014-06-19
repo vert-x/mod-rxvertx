@@ -26,63 +26,16 @@ public class ContextScheduler extends Scheduler {
 
   // Scheduler implementation
 
-  /** Schedule immediate task */
+  /** Create worker */
   @Override
-  public Subscription schedule(final Action1<Inner> action) {
-    InnerScheduler inner=new InnerScheduler();
-    inner.schedule(action);
-    return inner.innerSubscription;
+  public Worker createWorker() {
+    return new ContextWorker();
   }
 
-  /** Scheduler task after delay */
-  @Override
-  public Subscription schedule(final Action1<Inner> action, long delayTime, TimeUnit unit) {
-    InnerScheduler inner=new InnerScheduler();
-    inner.schedule(action,delayTime,unit);
-    return inner.innerSubscription;
-  }
+  // Scheduler.Worker implementation
 
-  /** Schedule repeating task */
-  @Override
-  public Subscription schedulePeriodically(final Action1<Inner> action, long initialDelay, final long period, final TimeUnit unit) {
-
-    final InnerScheduler inner=new InnerScheduler();
-
-    Handler bootstrap=new Handler() {
-      public void handle(Object event) {
-
-        action.call(inner);
-
-        // Check if still active
-        if (inner.innerSubscription.isUnsubscribed())
-          return;
-
-        // Start periodic sequence
-        inner.timers.add(vertx.setPeriodic(unit.toMillis(period),new Handler<Long>() {
-          public void handle(Long event) {
-            if (inner.innerSubscription.isUnsubscribed())
-              return;
-            action.call(inner);
-          }
-        }));
-      }
-    };
-
-    // initialDelay=0 -> schedule next
-    if (unit.toMillis(initialDelay)<1) {
-      vertx.runOnContext(bootstrap);
-    }
-    else {
-      vertx.setTimer(unit.toMillis(initialDelay),bootstrap);
-    }
-
-    return inner.innerSubscription;
-  }
-
-  // Inner scheduler
-
-  /** Inner Scheduler */
-  private class InnerScheduler extends Inner {
+  /** Worker */
+  private class ContextWorker extends Worker {
 
     /** Maintain list of all active timers */
     protected ArrayDeque<Long> timers=new ArrayDeque();
@@ -98,31 +51,68 @@ public class ContextScheduler extends Scheduler {
     /** Subscription with auto-cancel */
     protected BooleanSubscription innerSubscription=BooleanSubscription.create(cancelAll);
 
-    // Scheduler.Inner implementation
+    // Scheduler.Worker implementation
 
     @Override
-    public void schedule(final Action1<Inner> action) {
-      final Inner self=this;
+    public Subscription schedule(final Action0 action) {
       vertx.currentContext().runOnContext(new Handler<Void>() {
         public void handle(Void event) {
           if (innerSubscription.isUnsubscribed())
             return;
-          action.call(self);
+          action.call();
         }
       });
+      return this.innerSubscription;
     }
 
-     @Override
-    public void schedule(final Action1<Inner> action, long delayTime, TimeUnit unit) {
-      final Inner self=this;
+    @Override
+    public Subscription schedule(final Action0 action, long delayTime, TimeUnit unit) {
       timers.add(vertx.setTimer(unit.toMillis(delayTime),new Handler<Long>() {
         public void handle(Long id) {
           if (innerSubscription.isUnsubscribed())
             return;
-          action.call(self);
+          action.call();
           timers.remove(id);
         }
       }));
+      return this.innerSubscription;
+    }
+
+    @Override
+    public Subscription schedulePeriodically(final Action0 action, long initialDelay, final long delayTime, final TimeUnit unit) {
+
+      // Use a bootstrap handler to start the periodic timer after initialDelay
+      Handler bootstrap=new Handler<Long>() {
+        public void handle(Long id) {
+
+          action.call();
+
+          // Ensure still active
+          if (innerSubscription.isUnsubscribed())
+            return;
+
+          // Start the repeating timer
+          timers.add(vertx.setPeriodic(unit.toMillis(delayTime),new Handler<Long>() {
+            public void handle(Long nestedId) {
+              if (innerSubscription.isUnsubscribed())
+                return;
+              action.call();
+            }
+          }));
+        }
+      };
+
+      long bootDelay=unit.toMillis(initialDelay);
+
+      // If initialDelay is 0 then fire bootstrap immediately
+      if (bootDelay<1) {
+        vertx.runOnContext(bootstrap);
+      }
+      else {
+        timers.add(vertx.setTimer(bootDelay,bootstrap));
+      }
+
+      return this.innerSubscription;
     }
 
     @Override

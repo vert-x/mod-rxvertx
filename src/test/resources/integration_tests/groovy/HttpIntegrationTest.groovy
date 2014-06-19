@@ -23,7 +23,7 @@ def testSimpleGet() {
   
   client
     .getNow("/ping")
-    .mapMany({ resp -> 
+    .flatMap({ resp ->
       println("http-client:got-response:"+resp);
       return resp.asObservable()
     })
