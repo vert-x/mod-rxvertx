@@ -68,7 +68,7 @@ public class Regulator<R> implements Observable.Operator<R,R> {
 
     /** Flush the queue
      *
-     * @returns true if the queue was flushed
+     * @return true if the queue was flushed
      *
      **/
     protected boolean flush() {
