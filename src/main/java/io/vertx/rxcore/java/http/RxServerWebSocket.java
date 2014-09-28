@@ -11,7 +11,7 @@ import java.net.InetSocketAddress;
 /** Rx wrapper ServerWebSocket 
  * @author <a href="http://github.com/petermd">Peter McDonnell</a>
  */
-public class RxServerWebSocket extends RxWebSocket<RxServerWebSocket>  {
+public class RxServerWebSocket extends RxWebSocket<RxServerWebSocket> {
   
   /** Nested */
   private final ServerWebSocket nested;
@@ -28,6 +28,10 @@ public class RxServerWebSocket extends RxWebSocket<RxServerWebSocket>  {
   }
   
   // ServerWebSocket implementation
+
+  public String uri() {
+    return nested.uri();
+  }
 
   public String path() {
     return nested.path();
