@@ -66,7 +66,7 @@ public class HttpIntegrationTest extends TestVerticle {
         System.out.println("HttpClient:response-received");
         return resp
           .asObservable()
-          .reduce(RxSupport.mergeBuffers);
+          .reduce(new Buffer(),RxSupport.mergeBuffers);
       }
     };
   } 

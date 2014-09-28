@@ -22,7 +22,7 @@ public class RxHttpSupport {
       // Must use Rx methods to access stream as Observable
       assert(httpReq instanceof RxHttpServerRequest);
       
-      return ((RxHttpServerRequest)httpReq).asObservable().reduce(RxSupport.mergeBuffers);
+      return ((RxHttpServerRequest)httpReq).asObservable().reduce(new Buffer(),RxSupport.mergeBuffers);
     }
   };
   
@@ -76,7 +76,7 @@ public class RxHttpSupport {
 
         checkResponse(httpResp);
         
-        return httpResp.asObservable().reduce(RxSupport.mergeBuffers);
+        return httpResp.asObservable().reduce(new Buffer(),RxSupport.mergeBuffers);
       }
     };
   }
@@ -89,7 +89,7 @@ public class RxHttpSupport {
         checkResponse(httpResp);
         
         // TODO: Extract charset from Content-type
-        return httpResp.asObservable().reduce(RxSupport.mergeBuffers).map(RxSupport.decodeJson("utf8"));
+        return httpResp.asObservable().reduce(new Buffer(),RxSupport.mergeBuffers).map(RxSupport.decodeJson("utf8"));
       }
     };
   }
