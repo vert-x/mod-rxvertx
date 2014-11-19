@@ -18,9 +18,9 @@ package io.vertx.rxcore.test.integration.java;
  * @author <a href="http://tfox.org">Tim Fox</a>
  */
 
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import io.vertx.rxcore.RxSupport;
 import io.vertx.rxcore.java.eventbus.RxEventBus;
 import io.vertx.rxcore.java.eventbus.RxMessage;
 import io.vertx.rxcore.java.eventbus.RxStream;
@@ -29,17 +29,15 @@ import org.junit.Test;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.buffer.Buffer;
 import org.vertx.java.core.eventbus.Message;
+import org.vertx.java.core.eventbus.ReplyException;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.testtools.TestVerticle;
 import rx.Observable;
-import rx.Subscriber;
-import rx.Subscription;
 import rx.functions.*;
-import rx.subscriptions.Subscriptions;
 
 import static io.vertx.rxcore.test.integration.java.RxAssert.assertCountThenComplete;
 import static io.vertx.rxcore.test.integration.java.RxAssert.assertMessageThenComplete;
-import static io.vertx.rxcore.test.integration.java.RxAssert.assertSingle;
+import static io.vertx.rxcore.test.integration.java.RxAssert.assertError;
 import static org.vertx.testtools.VertxAssert.assertEquals;
 import static org.vertx.testtools.VertxAssert.testComplete;
 
@@ -60,6 +58,31 @@ public class EventBusIntegrationTest extends TestVerticle {
       public void call(RxMessage<String> message) {
         assertEquals("pong!", message.body());
         testComplete();
+      }
+    });
+  }
+
+  @Test
+  public void testDeferredSubscribe() {
+    RxEventBus rxEventBus = new RxEventBus(vertx.eventBus());
+    rxEventBus.<String>registerHandler("foo").subscribe(new Action1<RxMessage<String>>() {
+      @Override
+      public void call(RxMessage<String> message) {
+        message.reply("pong!");
+      }
+    });
+    // Message is sent on send
+    final Observable<RxMessage<String>> obs = rxEventBus.send("foo", "ping!");
+    // Defer the subscribe
+    vertx.setTimer(100,new Handler<Long>() {
+      public void handle(Long ev) {
+        obs.subscribe(new Action1<RxMessage<String>>() {
+          @Override
+          public void call(RxMessage<String> message) {
+            assertEquals("pong!", message.body());
+            testComplete();
+          }
+        });
       }
     });
   }
@@ -233,6 +256,21 @@ public class EventBusIntegrationTest extends TestVerticle {
   }
 
   @Test
+  public void testTimeout() {
+    final RxEventBus rx=new RxEventBus(vertx.eventBus());
+
+    // Register handler that timesout
+    rx.<String>registerHandler("thewall").subscribe(new Action1<RxMessage<String>>() {
+      public void call(RxMessage<String> req) {
+        // No-one listens
+        assertError(req.observeReplyWithTimeout("pong",200),ReplyException.class);
+      }
+    });
+
+    rx.send("thewall","ping");
+  }
+
+  @Test
   public void testRetry() {
 
     final RxEventBus rx=new RxEventBus(vertx.eventBus());
@@ -359,5 +397,4 @@ public class EventBusIntegrationTest extends TestVerticle {
 
     assertCountThenComplete(regulator.stream(res,out),401);
   }
-
 }

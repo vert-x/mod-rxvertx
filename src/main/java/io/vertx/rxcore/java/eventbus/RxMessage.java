@@ -1,5 +1,6 @@
 package io.vertx.rxcore.java.eventbus;
 
+import org.vertx.java.core.Handler;
 import org.vertx.java.core.eventbus.Message;
 import rx.Observable;
 
@@ -20,10 +21,10 @@ import rx.Observable;
  *
  * @author <a href="http://tfox.org">Tim Fox</a>
  */
-public class RxMessage<T> {
+public abstract class RxMessage<T> {
 
   /** Core Message */
-  private final Message<T> coreMessage;
+  protected final Message<T> coreMessage;
 
   /** Wrap Message with RxMessage */
   RxMessage(Message<T> coreMessage) {
@@ -49,7 +50,6 @@ public class RxMessage<T> {
     return coreMessage.replyAddress();
   }
 
-
   /**
    * @return The underlying core message
    */
@@ -68,20 +68,8 @@ public class RxMessage<T> {
   }
 
   /** Observe a reply */
-  public <R,T> Observable<RxMessage<T>> observeReply(final R msg) {
-    return Observable.create(new RxEventBus.SendHandler<T>() {
-      @Override public void execute() {
-        coreMessage.reply(msg,this);
-      }
-    });
-  }
+  public abstract <R,T> Observable<RxMessage<T>> observeReply(final R msg);
 
   /** Observe a reply with timeout */
-  public <R,T> Observable<RxMessage<T>> observerReplyWithTimeout(final R msg, final long timeout) {    
-    return Observable.create(new RxEventBus.AsyncSendHandler<T>() {
-      @Override public void execute() {
-        coreMessage.replyWithTimeout(msg,timeout,this);
-      }
-    });
-  }
+  public abstract <R,T> Observable<RxMessage<T>> observeReplyWithTimeout(final R msg, final long timeout);
 }
