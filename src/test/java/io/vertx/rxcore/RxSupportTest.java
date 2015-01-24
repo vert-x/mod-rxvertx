@@ -8,8 +8,8 @@ import rx.Observable;
 
 import java.util.Arrays;
 
-import static io.vertx.rxcore.test.integration.java.RxAssert.assertError;
 import static io.vertx.rxcore.test.integration.java.RxAssert.assertSingleThenComplete;
+import static io.vertx.rxcore.test.integration.java.RxAssert.assertErrorThenComplete;
 import static org.junit.Assert.*;
 import static org.vertx.testtools.VertxAssert.testComplete;
 
@@ -100,7 +100,7 @@ public class RxSupportTest extends TestVerticle {
     Observable<Buffer> merged=Observable.from(Arrays.asList(b1, b2, b3));
 
     // If you reduce() without a seed buffer it will fail because the first buffer cannot be appended to
-    assertError(merged.reduce(RxSupport.mergeBuffers),IndexOutOfBoundsException.class);
+    assertErrorThenComplete(merged.reduce(RxSupport.mergeBuffers), IndexOutOfBoundsException.class);
 
     // Using a writeable seed buffer will ensure you can reduce() successfully
     assertSingleThenComplete(merged.reduce(new Buffer(),RxSupport.mergeBuffers),new Buffer("b1b2"));

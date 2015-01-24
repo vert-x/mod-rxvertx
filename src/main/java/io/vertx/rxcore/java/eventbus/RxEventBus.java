@@ -173,6 +173,9 @@ public class RxEventBus {
       @Override public void execute() {
         eventBus.registerLocalHandler(address,this);
       }
+      @Override public void onUnsubscribed() {
+        eventBus.unregisterHandler(address,this);
+      }
     });
   }
 
@@ -181,6 +184,9 @@ public class RxEventBus {
     return Observable.create(new ReceiveHandler<T>() {
       @Override public void execute() {
         eventBus.registerHandler(address,this);
+      }
+      @Override public void onUnsubscribed() {
+        eventBus.unregisterHandler(address,this);
       }
     });
   }

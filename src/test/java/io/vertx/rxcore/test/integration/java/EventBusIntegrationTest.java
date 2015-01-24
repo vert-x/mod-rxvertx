@@ -18,7 +18,6 @@ package io.vertx.rxcore.test.integration.java;
  * @author <a href="http://tfox.org">Tim Fox</a>
  */
 
-import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import io.vertx.rxcore.java.eventbus.RxEventBus;
@@ -33,11 +32,10 @@ import org.vertx.java.core.eventbus.ReplyException;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.testtools.TestVerticle;
 import rx.Observable;
+import rx.Subscription;
 import rx.functions.*;
 
-import static io.vertx.rxcore.test.integration.java.RxAssert.assertCountThenComplete;
-import static io.vertx.rxcore.test.integration.java.RxAssert.assertMessageThenComplete;
-import static io.vertx.rxcore.test.integration.java.RxAssert.assertError;
+import static io.vertx.rxcore.test.integration.java.RxAssert.*;
 import static org.vertx.testtools.VertxAssert.assertEquals;
 import static org.vertx.testtools.VertxAssert.testComplete;
 
@@ -212,6 +210,41 @@ public class EventBusIntegrationTest extends TestVerticle {
   }
 
   @Test
+  public void testUnsubscribeUnregister() {
+
+    final RxEventBus rxEventBus = new RxEventBus(vertx.eventBus());
+
+    Action0 doNothing = new Action0() {
+      public void call() {}
+    };
+
+    Observable<RxMessage<String>> obs = rxEventBus.registerHandler("foo");
+
+    // Prove no-one listening until subscribed
+    assertErrorThen(rxEventBus.observeSend("foo", "no"), doNothing, ReplyException.class);
+
+    // Register a handler
+    final Subscription sub = obs.subscribe(new Action1<RxMessage<String>>() {
+      public void call(RxMessage<String> msg) {
+        System.out.println("received:"+msg);
+        assertEquals("yes",msg.body());
+        msg.reply("pong");
+      }
+    });
+
+    // Send one message then trigger unsubscribe
+    rxEventBus.observeSend("foo", "yes").subscribe(new Action1<RxMessage<Object>>() {
+      public void call(RxMessage<Object> msg) {
+        System.out.println("received-response:"+msg);
+        assertEquals("pong",msg.body());
+        sub.unsubscribe();
+        // Prove no-one listening again
+        assertErrorThenComplete(rxEventBus.observeSend("foo","never"), ReplyException.class);
+      }
+    });
+  }
+
+  @Test
   public void testReplyToReply() {
     final RxEventBus rxEventBus = new RxEventBus(vertx.eventBus());
 
@@ -263,7 +296,7 @@ public class EventBusIntegrationTest extends TestVerticle {
     rx.<String>registerHandler("thewall").subscribe(new Action1<RxMessage<String>>() {
       public void call(RxMessage<String> req) {
         // No-one listens
-        assertError(req.observeReplyWithTimeout("pong",200),ReplyException.class);
+        assertErrorThenComplete(req.observeReplyWithTimeout("pong", 200), ReplyException.class);
       }
     });
 

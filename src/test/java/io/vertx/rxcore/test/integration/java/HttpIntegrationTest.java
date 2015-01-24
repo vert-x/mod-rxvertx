@@ -102,7 +102,7 @@ public class HttpIntegrationTest extends TestVerticle {
       }
     });
     
-    assertError(ob,IllegalArgumentException.class);
+    assertErrorThenComplete(ob, IllegalArgumentException.class);
   }
 
   /*
@@ -120,7 +120,7 @@ public class HttpIntegrationTest extends TestVerticle {
       }
     });
     
-    assertError(ob,RuntimeException.class,"Builder Exception");
+    assertErrorThenComplete(ob, RuntimeException.class, "Builder Exception");
   }
 
   @Test

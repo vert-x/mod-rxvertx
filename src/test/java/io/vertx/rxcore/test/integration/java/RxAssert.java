@@ -34,7 +34,14 @@ public class RxAssert {
       t.printStackTrace(System.err);
     }
   }
-  
+
+  /** Action0 for completing test */
+  static Action0 thenComplete=new Action0() {
+    public void call() {
+      testComplete();
+    }
+  };
+
   /** Assert a message */
   public static <T> void assertMessageThenComplete(Observable<RxMessage<T>> in, final T exp) {
     final AtomicInteger count=new AtomicInteger(1);
@@ -83,14 +90,10 @@ public class RxAssert {
 
   /** Assert that we receive N values then complete test */
   public static <T> Subscription assertCountThenComplete(Observable<T> in, final int max) {
-    return assertCountThen(in,new Action0() {
-      @Override public void call() {
-        testComplete();
-      }
-    },max);
+    return assertCountThen(in,thenComplete,max);
   }
 
-  /** Assert that we receive N values then complete test */
+  /** Assert that we receive N values then call action */
   public static <T> Subscription assertCountThen(Observable<T> in, final Action0 thenAction, final int max) {
     final AtomicInteger count=new AtomicInteger(0);
     return in.subscribe(
@@ -120,11 +123,7 @@ public class RxAssert {
 
   /** Assert a sequence then complete test */
   public static <T> void assertSequenceThenComplete(Observable<T> in, final T... exp) {
-    assertSequenceThen(in, new Action0() {
-      @Override public void call() {
-        testComplete();
-      }
-    }, exp);
+    assertSequenceThen(in, thenComplete, exp);
   }
   
   /** Assert a sequence then call an Action0 when complete */
@@ -151,12 +150,22 @@ public class RxAssert {
   }
 
   /** Assert an expected error */
-  public static <T> void assertError(Observable<T> in, final Class errClass) {
-    assertError(in,errClass,null);
+  public static <T> void assertErrorThenComplete(Observable<T> in, final Class errClass) {
+    assertErrorThenComplete(in, errClass, null);
   }
 
   /** Assert an expected error */
-  public static <T> void assertError(Observable<T> in, final Class errClass, final String errMsg) {
+  public static <T> void assertErrorThenComplete(Observable<T> in, final Class errClass, final String errMsg) {
+    assertErrorThen(in, thenComplete, errClass, errMsg);
+  }
+
+  /** Assert an expected error */
+  public static <T> void assertErrorThen(Observable<T> in, final Action0 thenAction, final Class errClass) {
+    assertErrorThen(in,thenAction,errClass,null);
+  }
+
+  /** Assert an expected error */
+  public static <T> void assertErrorThen(Observable<T> in, final Action0 thenAction, final Class errClass, final String errMsg) {
     in.subscribe(
       new Action1<T>() {
         public void call(T value) {
@@ -169,7 +178,7 @@ public class RxAssert {
           assertEquals(errClass,t.getClass());
           if (errMsg!=null)
             assertEquals(errMsg,t.getMessage());  
-          testComplete();
+          thenAction.call();
         }
       },
       new Action0() {
