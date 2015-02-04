@@ -53,6 +53,18 @@ public class RxEventBus {
     }
   }
 
+  /** Async CompleteHandler */
+  protected class AsyncCompleteHandler<R> extends SingleSubscriptionHandler<Void, AsyncResult<Void>> {
+    @Override public void handle(AsyncResult<Void> r) {
+      if (r.succeeded()) {
+        fireComplete();
+      }
+      else {
+        fireError(r.cause());
+      }
+    }
+  }
+
   /** Async HandlerSubscription */
   protected class AsyncSendSubscription<R> extends HandlerSubscription<AsyncResult<Message<R>>,RxMessage<R>> {
 
@@ -127,6 +139,24 @@ public class RxEventBus {
   public RxEventBus(EventBus eventBus, int defaultTimeout) {
     this.eventBus = eventBus;
     this.defaultTimeout=defaultTimeout;
+  }
+
+  /** Return core */
+  public EventBus coreEventBus() {
+    return this.eventBus;
+  }
+
+  /** Close */
+  public Observable<Void> close()
+  {
+    AsyncCompleteHandler h=new AsyncCompleteHandler();
+    this.eventBus.close(h);
+    return Observable.create(h);
+  }
+
+  /** Publish */
+  public <S> void publish(final String address, final S msg) {
+    this.eventBus.publish(address,msg);
   }
 
   /** Send a message */

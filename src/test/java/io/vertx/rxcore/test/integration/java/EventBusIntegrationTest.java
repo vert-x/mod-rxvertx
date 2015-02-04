@@ -18,6 +18,7 @@ package io.vertx.rxcore.test.integration.java;
  * @author <a href="http://tfox.org">Tim Fox</a>
  */
 
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import io.vertx.rxcore.java.eventbus.RxEventBus;
@@ -37,9 +38,57 @@ import rx.functions.*;
 
 import static io.vertx.rxcore.test.integration.java.RxAssert.*;
 import static org.vertx.testtools.VertxAssert.assertEquals;
+import static org.vertx.testtools.VertxAssert.fail;
 import static org.vertx.testtools.VertxAssert.testComplete;
 
 public class EventBusIntegrationTest extends TestVerticle {
+
+  @Test
+  public void testClose() {
+
+    RxEventBus rxEventBus = new RxEventBus(vertx.eventBus());
+
+    rxEventBus.<String>registerHandler("foo").subscribe(new Action1<RxMessage<String>>() {
+      @Override
+      public void call(RxMessage<String> message) {
+        message.reply("pong!");
+      }
+    });
+    Observable<RxMessage<String>> obs = rxEventBus.send("foo", "ping!");
+    obs.subscribe(new Action1<RxMessage<String>>() {
+      @Override
+      public void call(RxMessage<String> message) {
+        assertEquals("pong!", message.body());
+      }
+    });
+
+    assertCompletes(rxEventBus.close());
+  }
+
+  @Test
+  public void testPublish() {
+
+    RxEventBus rxEventBus=new RxEventBus(vertx.eventBus());
+
+    final CountDownLatch received=new CountDownLatch(2);
+
+    rxEventBus.<String>registerHandler("foo").subscribe(new Action1<RxMessage<String>>() {
+      public void call(RxMessage<String> message) {
+        assertEquals("shout!", message.body());
+        received.countDown();
+      }
+    });
+    rxEventBus.<String>registerHandler("foo").subscribe(new Action1<RxMessage<String>>() {
+      public void call(RxMessage<String> message) {
+        assertEquals("shout!", message.body());
+        received.countDown();
+      }
+    });
+
+    rxEventBus.publish("foo","shout!");
+
+    RxAssert.assertCompleted(received);
+  }
 
   @Test
   public void testSimpleSubscribeReply() {

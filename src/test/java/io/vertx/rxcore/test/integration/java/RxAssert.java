@@ -1,6 +1,7 @@
 package io.vertx.rxcore.test.integration.java;
 
 import java.util.*;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import io.vertx.rxcore.java.eventbus.RxMessage;
@@ -116,6 +117,11 @@ public class RxAssert {
       });
   }
 
+  /** Assert sequence completes */
+  public static <T> void assertCompletes(Observable<T> in) {
+    assertSequenceThenComplete(Observable.from(new Void[] {}));
+  }
+
   /** Assert a single value then complete test */
   public static <T> void assertSingleThenComplete(Observable<T> in, final T value) {
     assertSequenceThenComplete(in,value);
@@ -186,5 +192,19 @@ public class RxAssert {
           fail("unexpected-complete: failure expected");
         }
       });
+  }
+
+  /** Fire testComplete when counter has been completed */
+  public static  void assertCompleted(final CountDownLatch counter) {
+    new Thread() {
+      public void run() {
+        try {
+          counter.await();
+          testComplete();
+        } catch (InterruptedException e) {
+          fail("Unexpected interruption");
+        }
+      }
+    }.start();
   }
 }
