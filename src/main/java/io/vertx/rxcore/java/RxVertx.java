@@ -7,7 +7,10 @@ import io.vertx.rxcore.java.impl.ContextScheduler;
 import io.vertx.rxcore.java.net.RxNetClient;
 import io.vertx.rxcore.java.net.RxNetServer;
 import io.vertx.rxcore.java.timer.RxTimer;
+
+import org.vertx.java.core.Context;
 import org.vertx.java.core.Vertx;
+
 import rx.Observable;
 
 /** RxVertx */
@@ -15,6 +18,9 @@ public class RxVertx {
   
   /** Core */
   private Vertx core;
+  
+  /** Context */
+  private Context context;
   
   /** EventBus */
   private RxEventBus eventBus;
@@ -25,9 +31,15 @@ public class RxVertx {
   /** Scheduler */
   private ContextScheduler ctxScheduler;
   
-  /** Create RxVertx from Core */
+  /** Create RxVertx from Core using current Context */
   public RxVertx(Vertx vertx) {
+      this(vertx, vertx.currentContext());
+  }
+
+  /** Create RxVertx from Core and Context */
+  public RxVertx(Vertx vertx, Context context) {
     this.core=vertx;
+    this.context = context;
     this.eventBus=new RxEventBus(core.eventBus());
     this.timer=new RxTimer(core);
   }
@@ -42,7 +54,7 @@ public class RxVertx {
   /** Return context scheduler */
   public ContextScheduler contextScheduler() {
     if (this.ctxScheduler==null) {
-      this.ctxScheduler=new ContextScheduler(core);
+      this.ctxScheduler=new ContextScheduler(core, context);
     }
     return this.ctxScheduler;
   }
