@@ -216,10 +216,10 @@ def loadProperties(String sourceFileName) {
 plugins.withType(IdeaPlugin) {
   idea {
     module {
-      scopes.PROVIDED.plus += configurations.provided
-      scopes.COMPILE.minus += configurations.provided
-      scopes.TEST.minus += configurations.provided
-      scopes.RUNTIME.minus += configurations.provided
+      scopes.PROVIDED.plus += [configurations.provided]
+      scopes.COMPILE.minus += [configurations.provided]
+      scopes.TEST.minus += [configurations.provided]
+      scopes.RUNTIME.minus += [configurations.provided]
     }
   }
 }
