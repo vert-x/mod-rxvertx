@@ -479,4 +479,17 @@ public class EventBusIntegrationTest extends TestVerticle {
 
     assertCountThenComplete(regulator.stream(res,out),401);
   }
+
+  @Test
+  public void testFail() {
+    final RxEventBus rxEventBus=new RxEventBus(vertx.eventBus());
+
+    rxEventBus.<String>registerHandler("fail").subscribe(new Action1<RxMessage<String>>() {
+      public void call(RxMessage<String> req) {
+        req.fail(-1, "oops");
+      }
+    });
+
+    assertErrorThenComplete(rxEventBus.observeSend("fail", "ping"), ReplyException.class, "oops");
+  }
 }
