@@ -72,4 +72,9 @@ public abstract class RxMessage<T> {
 
   /** Observe a reply with timeout */
   public abstract <R,T> Observable<RxMessage<T>> observeReplyWithTimeout(final R msg, final long timeout);
+
+  /** Send a signal that processing of this message failed */
+  public void fail(int failureCode, String message) {
+    coreMessage.fail(failureCode, message);
+  }
 }
