@@ -38,23 +38,7 @@ public class ContextScheduler extends Scheduler {
   public Worker createWorker() {
     return new ContextWorker();
   }
-
-  @Override
-  public int parallelism() {
-    /* Only the uncommon Vertx MultiThreadedWorkerContext could be
-     * considered to be parallel in the sense meant (I think?), so
-     * claim to have no parallelism otherwise.
-     */
-    if (context instanceof MultiThreadedWorkerContext) {
-        /* maybe return the real vertx worker thread pool size,
-         * not sure that's available anywhere in public api though.
-         */
-        return super.parallelism();
-    }
-    // must be one of the ordered contexts -> no parallelism intra context
-    return 1;
-  }
-
+  
   /* ContextAction is conceptually similar to rx.internal.schedulers.ScheduledAction
    */
   private static final class ContextAction implements Subscription {
