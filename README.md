@@ -1,14 +1,15 @@
-mod-rxvertx
-===========
+# Vert.x 2.x is **deprecated** - use instead http://vertx.io/docs/vertx-rx/java/
+
+## mod-rxvertx
 
 Vert.x module which uses RxJava to add support for [Reactive Extensions](https://rx.codeplex.com/) (RX) using the [RxJava](https://github.com/Netflix/RxJava/wiki) library. This allows VertX developers to use the RxJava type-safe composable API to build VertX verticles.
 
-## Dependencies
+### Dependencies
 
 - The module wraps the VertX core objects to add Observable support so it is tightly bound to the VertX release. 
 - This module also contains the Netflix RxJava library.
 
-## Status
+### Status
 Currently Observable wrappers are provided for
 
 - EventBus
@@ -25,7 +26,7 @@ Support coming soon for
 - FileSystem
 - SockJSServer
 
-## Usage
+### Usage
 
 This is a non-runnable module, which means you add it to your module via the "includes" attribute of mod.json.
 
@@ -49,7 +50,7 @@ Observable<T> observeMethod(args...)
 
 where the operation is executed on subscribe. This latter form is the more 'pure' Rx method and should be used where possible (required to maintain semantics of concat eg) 
  
-### EventBus
+#### EventBus
 
 ```java
 
@@ -78,7 +79,7 @@ obs.subscribe(
 
 ```
 
-### Scheduler
+#### Scheduler
 
 The standard RxJava schedulers are not compatible with VertX. In order to preserve the [Vert.x Threading Model](http://vertx.io/manual.html#concurrency
 ) all callbacks to a Verticle must be made in the context of that Verticle instance.
@@ -101,7 +102,7 @@ Observable
       .subscribe(...)
 ```
 
-### Timer
+#### Timer
 
 The timer functions are provided via the RxVertx wrapper. The timer is set on-subscribe. To cancel a timer that has not first, or a periodic timer, just unsubscribe.
 
@@ -117,16 +118,16 @@ rx.setTimer(100).subscribe(new Action1<Long>() {
 
 _The new Scheduler means you can use the native RxJava Timer methods - this Timer may be deprecated in future_
 
-### Helper ###
+#### Helper ####
 The support class `RxSupport` provides several helper methods for some standard tasks
 
-#### Streams ####
+##### Streams #####
 There are two primary wrappers
 
-##### Observable<Buffer> RxSupport.toObservable(ReadStream) ####
+###### Observable<Buffer> RxSupport.toObservable(ReadStream) #####
 Convert a `ReadStream` into an `Observable<Buffer>`
 
-##### RxSupport.stream(Observable<Buffer>,WriteStream) ####
+###### RxSupport.stream(Observable<Buffer>,WriteStream) #####
 Stream the output of an `Observable` to a `WriteStream`.
 
 _please note that this method does not handle `writeQueueFull` so cannot be used as a pump_
